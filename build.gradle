@@ -94,7 +94,7 @@ jlink {
         installerName = "PharmacyPOS-${project.version}"
         appVersion = "${project.version}"
         vendor = 'Bangladesh Pharmacy SaaS Systems'
-        copyright = 'Copyright 2026 Bangladesh Pharmacy SaaS'
+        imageOptions = ['--copyright', 'Copyright 2026 Bangladesh Pharmacy SaaS']
         installerOptions = [
             '--win-menu',
             '--win-shortcut',
