@@ -1,0 +1,24 @@
+# Gradle & Java build outputs
+.gradle/
+build/
+target/
+*.class
+*.jar
+*.war
+
+# IDE & Editor files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
