@@ -1,0 +1,21 @@
+/*
+ * settings.gradle - Bangladesh Multi-Tenant Pharmacy ERP & POS Desktop Client
+ * Architecture Decision: ADR-0021 & ADR-0023
+ */
+
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'pharmacy-desktop-javafx'
+

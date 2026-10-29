@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.pharmacy.pos.controllers.PosController"
+            prefHeight="800.0" prefWidth="1280.0">
+
+    <top>
+        <HBox styleClass="header-bar" spacing="16.0">
+            <Label text="Bangladesh Pharmacy ERP &amp; POS" styleClass="brand-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="networkStatusLabel" text="Online Authority" styleClass="status-badge-online"/>
+            <Label text="Shift: Active" styleClass="status-badge-online"/>
+        </HBox>
+    </top>
+
+    <center>
+        <VBox spacing="16.0" styleClass="pos-container">
+            <HBox spacing="12.0" alignment="CENTER_LEFT">
+                <TextField fx:id="barcodeInputField" promptText="Scan Barcode or Search Generic / Brand (F2)..."
+                           styleClass="search-box" HBox.hgrow="ALWAYS"/>
+                <Button text="Add Item" styleClass="btn-primary"/>
+            </HBox>
+
+            <TableView fx:id="cartTable" VBox.vgrow="ALWAYS" styleClass="cart-table">
+                <columns>
+                    <TableColumn fx:id="brandCol" text="Medicine / Brand" prefWidth="300.0"/>
+                    <TableColumn fx:id="unitCol" text="Packaging Unit" prefWidth="140.0"/>
+                    <TableColumn fx:id="qtyCol" text="Qty" prefWidth="90.0"/>
+                    <TableColumn fx:id="priceCol" text="Unit Price (BDT)" prefWidth="160.0"/>
+                    <TableColumn fx:id="totalCol" text="Total (BDT)" prefWidth="180.0"/>
+                </columns>
+                <placeholder>
+                    <Label text="Cart is empty. Scan barcode or type medicine name to begin sale."/>
+                </placeholder>
+            </TableView>
+        </VBox>
+    </center>
+
+    <right>
+        <VBox prefWidth="360.0" spacing="16.0" styleClass="pos-container">
+            <VBox styleClass="totals-card">
+                <Label text="Payment Summary" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+                <Separator/>
+                <HBox>
+                    <Label text="Subtotal:"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="subtotalLabel" text="BDT 0.00"/>
+                </HBox>
+                <HBox>
+                    <Label text="VAT (5% / Exempt):"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="vatLabel" text="BDT 0.00"/>
+                </HBox>
+                <Separator/>
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="Grand Total:" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="grandTotalLabel" text="BDT 0.00" styleClass="total-amount-large"/>
+                </HBox>
+            </VBox>
+
+            <Button fx:id="checkoutButton" text="Complete Checkout (F4)"
+                    onAction="#handleCheckout" maxWidth="Infinity" styleClass="btn-primary"/>
+        </VBox>
+    </right>
+
+    <bottom>
+        <HBox style="-fx-background-color: #E5E7EB; -fx-padding: 8px 16px;" spacing="16.0">
+            <Label text="Cashier: cashier-demo | Branch: Dhanmondi Branch"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="Shortcuts: [F2] Scan | [F4] Checkout | [F9] Hold | [Esc] Clear"/>
+        </HBox>
+    </bottom>
+</BorderPane>
+

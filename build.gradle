@@ -1,0 +1,105 @@
+/*
+ * build.gradle - Bangladesh Multi-Tenant Pharmacy ERP & POS Desktop Client
+ * Architecture Decision: ADR-0021 & ADR-0023
+ * Java LTS (17/21) + OpenJFX 21 + Modular JPMS + Vector Icons (No Emojis)
+ */
+
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'org.beryx.jlink' version '3.0.1'
+    id 'jacoco'
+}
+
+group = 'com.pharmacy.pos'
+version = '2.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+javafx {
+    version = "21.0.2"
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.media', 'javafx.web' ]
+}
+
+application {
+    mainModule = 'com.pharmacy.pos'
+    mainClass = 'com.pharmacy.pos.MainApp'
+}
+
+ext {
+    ikonliVersion = '12.3.1'
+    jacksonVersion = '2.17.0'
+    junitVersion = '5.10.2'
+    testfxVersion = '4.0.18'
+}
+
+dependencies {
+    // Vector Icon Packs (ADR-0009: Strict Prohibition of Emoji Icons)
+    implementation "org.kordamp.ikonli:ikonli-javafx:${ikonliVersion}"
+    implementation "org.kordamp.ikonli:ikonli-feather-pack:${ikonliVersion}"
+    implementation "org.kordamp.ikonli:ikonli-materialdesign2-pack:${ikonliVersion}"
+
+    // JSON Data Binding & Serialization for API Sync Contracts
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"
+
+    // Networking & Cloud Authority REST API Client
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+
+    // Local Durable Outbox & Encrypted Offline Store
+    implementation 'org.xerial:sqlite-jdbc:3.45.2.0'
+
+    // Logging Infrastructure
+    implementation 'org.slf4j:slf4j-api:2.0.12'
+    implementation 'ch.qos.logback:logback-classic:1.5.3'
+
+    // Automated Unit & UI Testing
+    testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation "org.testfx:testfx-core:${testfxVersion}"
+    testImplementation "org.testfx:testfx-junit5:${testfxVersion}"
+    testImplementation 'org.assertj:assertj-core:3.25.3'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+jlink {
+    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    launcher {
+        name = 'pharmacy-pos'
+    }
+    jpackage {
+        imageName = 'PharmacyPOS'
+        installerName = "PharmacyPOS-${project.version}"
+        appVersion = "${project.version}"
+        vendor = 'Bangladesh Pharmacy SaaS Systems'
+        copyright = 'Copyright 2026 Bangladesh Pharmacy SaaS'
+        installerOptions = [
+            '--win-menu',
+            '--win-shortcut',
+            '--win-dir-chooser'
+        ]
+    }
+}
+
