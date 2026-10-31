@@ -51,3 +51,4 @@ public class ClientVersionServiceTest {
         assertThrows(IllegalArgumentException.class, () -> ClientVersionService.SemVer.parse(null));
     }
 }
+
