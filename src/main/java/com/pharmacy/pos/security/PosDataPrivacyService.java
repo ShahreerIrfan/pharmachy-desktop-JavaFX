@@ -118,3 +118,4 @@ public class PosDataPrivacyService {
         return UiState.ERROR;
     }
 }
+

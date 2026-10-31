@@ -99,3 +99,4 @@ public class PosDataPrivacyServiceTest {
         assertTrue(deniedMsg.get("bn").contains("প্রবেশাধিকার প্রত্যাখ্যাত"));
     }
 }
+
