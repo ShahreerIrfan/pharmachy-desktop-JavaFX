@@ -34,3 +34,4 @@ public record PosAuditEvent(
         afterState = afterState != null ? Collections.unmodifiableMap(afterState) : Collections.emptyMap();
     }
 }
+

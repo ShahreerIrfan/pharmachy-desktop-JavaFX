@@ -119,3 +119,4 @@ class PosAuditEventManagerTest {
         assertEquals(UiState.ERROR, PosAuditEventManager.resolveUiState("ERR_NETWORK"));
     }
 }
+

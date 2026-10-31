@@ -142,3 +142,4 @@ public class PosAuditEventManager {
         return UiState.ERROR;
     }
 }
+
