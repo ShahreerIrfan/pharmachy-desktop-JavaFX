@@ -154,3 +154,4 @@ public class PosSearchPaginationService {
         return UiState.ERROR;
     }
 }
+

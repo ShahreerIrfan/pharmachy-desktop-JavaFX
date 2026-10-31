@@ -36,3 +36,4 @@ public record PosCursorPage<T>(
         return items.size();
     }
 }
+

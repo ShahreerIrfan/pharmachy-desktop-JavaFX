@@ -147,3 +147,4 @@ public class PosSearchPaginationServiceTest {
         assertEquals(UiState.ERROR, PosSearchPaginationService.resolveUiState("ERR_INVALID_CURSOR"));
     }
 }
+
