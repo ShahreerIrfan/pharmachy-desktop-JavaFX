@@ -90,3 +90,4 @@ public class PosUserIdentityService {
         return email != null && EMAIL_PATTERN.matcher(email.trim()).matches();
     }
 }
+

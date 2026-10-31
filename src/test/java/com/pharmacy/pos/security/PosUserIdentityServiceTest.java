@@ -63,3 +63,4 @@ class PosUserIdentityServiceTest {
         assertFalse(archivedOwner.canManageStaff(), "Archived user cannot manage staff");
     }
 }
+
