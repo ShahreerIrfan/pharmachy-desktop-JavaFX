@@ -35,3 +35,4 @@ public record PosStoredAttachment(
         return "CLEAN".equalsIgnoreCase(scanStatus) && !isQuarantined;
     }
 }
+
