@@ -89,3 +89,4 @@ public final class PosTenantDetailTimelineClient {
         return entry.containsKey("action") && entry.containsKey("status") && entry.containsKey("timestamp");
     }
 }
+
