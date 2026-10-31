@@ -119,3 +119,4 @@ class PosInputValidationContractTest {
         assertEquals(List.of("Quantity must be positive."), detail.fieldErrors().get("quantity"));
     }
 }
+

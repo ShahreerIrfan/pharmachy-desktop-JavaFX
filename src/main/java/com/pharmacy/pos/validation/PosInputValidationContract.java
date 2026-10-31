@@ -123,3 +123,4 @@ public class PosInputValidationContract {
         return new ValidationErrorDetail(code, msgEn, msgBn, fields, retryable);
     }
 }
+
