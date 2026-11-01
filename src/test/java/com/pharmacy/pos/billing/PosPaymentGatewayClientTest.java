@@ -66,3 +66,4 @@ class PosPaymentGatewayClientTest {
         assertEquals("৳ 6825.00", PosPaymentGatewayClient.formatCurrency(new BigDecimal("6825.00")));
     }
 }
+
