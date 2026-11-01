@@ -100,3 +100,4 @@ public class PosProratedUpgradeClientTest {
         assertEquals("নতুন ফিচার অবিলম্বে কার্যকর হয়েছে", PosProratedUpgradeClient.getLocalizedLabel("IMMEDIATE_GRANT", true));
     }
 }
+
