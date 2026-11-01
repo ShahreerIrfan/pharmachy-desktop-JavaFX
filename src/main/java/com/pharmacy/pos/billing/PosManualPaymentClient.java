@@ -106,3 +106,4 @@ public class PosManualPaymentClient {
         return "৳ " + val.setScale(2, RoundingMode.HALF_UP).toPlainString();
     }
 }
+

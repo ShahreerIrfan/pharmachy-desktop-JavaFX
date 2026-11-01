@@ -95,3 +95,4 @@ class PosManualPaymentClientTest {
         assertEquals("৳ 6825.00", PosManualPaymentClient.formatCurrency(new BigDecimal("6825.00")));
     }
 }
+
