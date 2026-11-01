@@ -106,3 +106,4 @@ public class PosTenantOnboardingWizardClientTest {
         assertEquals("/api/v2/platform/onboarding-wizard/onb-123/abandon/", PosTenantOnboardingWizardClient.resolveEndpoint("abandon", "onb-123"));
     }
 }
+

@@ -136,3 +136,4 @@ public final class PosTenantOnboardingWizardClient {
         return "/api/v2/platform/onboarding-wizard/" + cleanId + "/";
     }
 }
+
