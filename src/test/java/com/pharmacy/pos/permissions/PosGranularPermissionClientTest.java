@@ -102,3 +102,4 @@ class PosGranularPermissionClientTest {
         assertEquals(PosGranularPermissionClient.UiStatus.PERMISSION_DENIED, denied.status);
     }
 }
+

@@ -239,3 +239,4 @@ public final class PosGranularPermissionClient {
         return new GranularPermissionState(userId, tenantId, role, costVis, defaults);
     }
 }
+
