@@ -177,3 +177,4 @@ public class PosExpiryManufacturingClientTest {
         assertEquals("স্বাভাবিক তাপমাত্রা (১৫°সে - ২৫°সে)", client.getStorageConditionDisplay("ROOM_TEMPERATURE_15_25C", "bn"));
     }
 }
+
