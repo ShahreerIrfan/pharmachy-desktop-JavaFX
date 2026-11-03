@@ -107,3 +107,292 @@
     -fx-background-radius: 4px;
 }
 
+/* --------------------------------------------------------------------------
+ * World-Class Split-Screen POS Terminal & Touch PIN-Pad Design (ADR-0007, ADR-0023)
+ * -------------------------------------------------------------------------- */
+
+.terminal-split-root {
+    -fx-background-color: #0F172A;
+}
+
+/* Left Hero & Information Column (Deep Navy / Slate) */
+.hero-column {
+    -fx-background-color: linear-gradient(to bottom right, #0F172A, #1E293B);
+    -fx-padding: 40px 36px;
+    -fx-spacing: 24px;
+    -fx-pref-width: 480px;
+    -fx-min-width: 440px;
+    -fx-max-width: 520px;
+    -fx-border-color: #334155;
+    -fx-border-width: 0 1px 0 0;
+}
+
+.hero-brand-pill {
+    -fx-background-color: rgba(2, 132, 199, 0.15);
+    -fx-text-fill: #38BDF8;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-padding: 4px 10px;
+    -fx-background-radius: 20px;
+    -fx-border-color: rgba(56, 189, 248, 0.3);
+    -fx-border-radius: 20px;
+    -fx-border-width: 1px;
+}
+
+.hero-app-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #FFFFFF;
+}
+
+.hero-app-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #94A3B8;
+}
+
+.hero-clock-large {
+    -fx-font-size: 42px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #F8FAFC;
+    -fx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.hero-date-text {
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #38BDF8;
+}
+
+.hero-info-card {
+    -fx-background-color: rgba(30, 41, 59, 0.7);
+    -fx-border-color: #334155;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+    -fx-padding: 18px;
+    -fx-spacing: 12px;
+}
+
+.hero-card-header {
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #64748B;
+}
+
+.hero-info-row-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #94A3B8;
+}
+
+.hero-info-row-value {
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #F1F5F9;
+}
+
+.hero-shortcut-badge {
+    -fx-background-color: #334155;
+    -fx-text-fill: #E2E8F0;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-padding: 3px 8px;
+    -fx-background-radius: 4px;
+}
+
+.hero-compliance-text {
+    -fx-font-size: 11px;
+    -fx-text-fill: #64748B;
+}
+
+/* Right Touch PIN-Pad & Staff Selection Terminal (Clean Crisp White/Slate) */
+.touch-terminal-column {
+    -fx-background-color: #F8FAFC;
+    -fx-padding: 32px 48px;
+    -fx-spacing: 20px;
+    -fx-alignment: TOP_CENTER;
+}
+
+.terminal-header-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #0F172A;
+}
+
+.terminal-header-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #64748B;
+}
+
+.lang-toggle-container {
+    -fx-background-color: #E2E8F0;
+    -fx-background-radius: 20px;
+    -fx-padding: 2px;
+}
+
+.lang-toggle-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #475569;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-padding: 4px 12px;
+    -fx-background-radius: 18px;
+    -fx-cursor: hand;
+}
+
+.lang-toggle-btn-active {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #0F172A;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.08), 4, 0, 0, 1);
+}
+
+/* Staff Profile Selection Tiles */
+.staff-tile {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E2E8F0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+    -fx-padding: 12px 16px;
+    -fx-cursor: hand;
+    -fx-pref-width: 220px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.02), 6, 0, 0, 1);
+}
+
+.staff-tile:hover {
+    -fx-background-color: #F8FAFC;
+    -fx-border-color: #CBD5E1;
+}
+
+.staff-tile-active {
+    -fx-background-color: #F0F9FF;
+    -fx-border-color: #0284C7;
+    -fx-border-width: 2px;
+}
+
+.avatar-circle {
+    -fx-background-color: #E0F2FE;
+    -fx-background-radius: 50%;
+    -fx-pref-width: 36px;
+    -fx-pref-height: 36px;
+    -fx-min-width: 36px;
+    -fx-min-height: 36px;
+    -fx-alignment: CENTER;
+}
+
+.avatar-initials {
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #0369A1;
+}
+
+.staff-tile-name {
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #0F172A;
+}
+
+.staff-tile-role {
+    -fx-font-size: 11px;
+    -fx-font-weight: 500;
+    -fx-text-fill: #64748B;
+}
+
+/* Tactile PIN Dot Display */
+.pin-display-card {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E2E8F0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+    -fx-padding: 14px 24px;
+    -fx-alignment: CENTER;
+    -fx-spacing: 16px;
+}
+
+.pin-dot {
+    -fx-background-color: #E2E8F0;
+    -fx-background-radius: 50%;
+    -fx-pref-width: 16px;
+    -fx-pref-height: 16px;
+    -fx-min-width: 16px;
+    -fx-min-height: 16px;
+}
+
+.pin-dot-filled {
+    -fx-background-color: #0284C7;
+}
+
+/* Tactile Numpad Grid */
+.numpad-grid {
+    -fx-hgap: 12px;
+    -fx-vgap: 10px;
+    -fx-alignment: CENTER;
+}
+
+.numpad-key {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #CBD5E1;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-pref-width: 88px;
+    -fx-pref-height: 52px;
+    -fx-font-size: 20px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #0F172A;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.03), 4, 0, 0, 1);
+}
+
+.numpad-key:hover {
+    -fx-background-color: #F1F5F9;
+    -fx-border-color: #94A3B8;
+}
+
+.numpad-key:pressed {
+    -fx-background-color: #E2E8F0;
+}
+
+.numpad-key-action {
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #475569;
+    -fx-background-color: #F1F5F9;
+}
+
+.numpad-key-action:hover {
+    -fx-background-color: #E2E8F0;
+}
+
+/* Unlock Primary Button */
+.btn-unlock-large {
+    -fx-background-color: #0284C7;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+    -fx-pref-height: 48px;
+    -fx-background-radius: 10px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(2, 132, 199, 0.25), 10, 0, 0, 3);
+}
+
+.btn-unlock-large:hover {
+    -fx-background-color: #0369A1;
+}
+
+.btn-unlock-large:pressed {
+    -fx-background-color: #075985;
+}
+
+.shift-meta-pill {
+    -fx-background-color: #F1F5F9;
+    -fx-border-color: #E2E8F0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 6px 14px;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #475569;
+}
+

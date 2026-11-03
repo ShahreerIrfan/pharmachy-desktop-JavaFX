@@ -1,5 +1,6 @@
 package com.pharmacy.pos.controllers;
 
+import com.pharmacy.pos.MainApp;
 import com.pharmacy.pos.models.CartItem;
 import com.pharmacy.pos.models.SaleTransaction;
 import com.pharmacy.pos.models.TenantSession;
@@ -15,6 +16,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -38,6 +40,8 @@ public class PosController {
     @FXML private Label vatLabel;
     @FXML private Label grandTotalLabel;
     @FXML private Label networkStatusLabel;
+    @FXML private Label shiftStatusBadge;
+    @FXML private Label cashierFooterLabel;
     @FXML private Button checkoutButton;
 
     private final ObservableList<CartItem> cartItems = FXCollections.observableArrayList();
@@ -60,6 +64,30 @@ public class PosController {
 
     public void setSession(TenantSession session) {
         this.currentSession = session;
+        if (cashierFooterLabel != null && session != null) {
+            cashierFooterLabel.setText("Cashier: " + session.getUserId() + " (" + session.getUserRole() + ") | Branch: " + session.getBranchId());
+        }
+    }
+
+    public void setSessionDetails(TenantSession session, String staffName, String shiftName, String openingFloat) {
+        this.currentSession = session;
+        if (cashierFooterLabel != null && session != null) {
+            cashierFooterLabel.setText("Cashier: " + staffName + " (" + session.getUserRole() + ") | Branch: Dhanmondi Central | Shift Float: BDT " + openingFloat);
+        }
+        if (shiftStatusBadge != null) {
+            String shortShift = (shiftName != null && shiftName.contains("("))
+                    ? shiftName.substring(0, shiftName.indexOf("(")).trim()
+                    : (shiftName != null ? shiftName : "Active");
+            shiftStatusBadge.setText("Shift: " + shortShift);
+        }
+    }
+
+    @FXML
+    public void handleLockCounter() {
+        if (checkoutButton != null && checkoutButton.getScene() != null) {
+            Stage stage = (Stage) checkoutButton.getScene().getWindow();
+            MainApp.showLoginGate(stage);
+        }
     }
 
     public void addItem(CartItem item) {

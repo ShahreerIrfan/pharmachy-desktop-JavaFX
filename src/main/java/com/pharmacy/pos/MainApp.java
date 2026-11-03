@@ -1,12 +1,13 @@
 package com.pharmacy.pos;
 
+import com.pharmacy.pos.controllers.PosController;
+import com.pharmacy.pos.models.TenantSession;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import java.io.IOException;
 import java.net.URL;
 
 /**
@@ -19,10 +20,24 @@ public class MainApp extends Application {
     public static final String OFFLINE_RECEIPT_WATERMARK_EN = "*** OFFLINE RECEIPT - PENDING CLOUD CONFIRMATION ***";
     public static final String OFFLINE_RECEIPT_WATERMARK_BN = "*** অফলাইন রসিদ - ক্লাউড কনফার্মেশন অপেক্ষমান ***";
 
+    private static Stage primaryStageInstance;
+
+    public static Stage getPrimaryStage() {
+        return primaryStageInstance;
+    }
+
     @Override
     public void start(Stage primaryStage) {
+        primaryStageInstance = primaryStage;
+        showLoginGate(primaryStage);
+    }
+
+    /**
+     * Shows the Terminal Sign-In & Shift Activation Gate as the primary entry scene.
+     */
+    public static void showLoginGate(Stage stage) {
         try {
-            URL fxmlUrl = getClass().getResource("/com/pharmacy/pos/views/main.fxml");
+            URL fxmlUrl = MainApp.class.getResource("/com/pharmacy/pos/views/login_gate.fxml");
             Parent root;
             if (fxmlUrl != null) {
                 root = FXMLLoader.load(fxmlUrl);
@@ -31,18 +46,51 @@ public class MainApp extends Application {
             }
 
             Scene scene = new Scene(root, 1280, 800);
-            URL cssUrl = getClass().getResource("/com/pharmacy/pos/styles/tokens.css");
+            URL cssUrl = MainApp.class.getResource("/com/pharmacy/pos/views/login-gate.css");
             if (cssUrl != null) {
                 scene.getStylesheets().add(cssUrl.toExternalForm());
             }
 
-            primaryStage.setTitle(APP_NAME + " v" + APP_VERSION);
-            primaryStage.setMinWidth(1024);
-            primaryStage.setMinHeight(700);
-            primaryStage.setScene(scene);
-            primaryStage.show();
+            stage.setTitle(APP_NAME + " v" + APP_VERSION + " - Counter Sign-In & Shift Gate");
+            stage.setMinWidth(1024);
+            stage.setMinHeight(700);
+            stage.setScene(scene);
+            stage.show();
         } catch (Exception e) {
-            System.err.println("Failed to start JavaFX POS UI: " + e.getMessage());
+            System.err.println("Failed to start JavaFX Login Gate UI: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Transitions from Login Gate into the Main POS Billing & Sales Counter screen.
+     */
+    public static void showPosScreen(
+            Stage stage,
+            TenantSession session,
+            String staffName,
+            String shiftName,
+            String openingFloat) {
+        try {
+            URL fxmlUrl = MainApp.class.getResource("/com/pharmacy/pos/views/main.fxml");
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
+            Parent root = loader.load();
+
+            PosController controller = loader.getController();
+            if (controller != null) {
+                controller.setSessionDetails(session, staffName, shiftName, openingFloat);
+            }
+
+            Scene scene = new Scene(root, 1280, 800);
+            URL cssUrl = MainApp.class.getResource("/com/pharmacy/pos/styles/tokens.css");
+            if (cssUrl != null) {
+                scene.getStylesheets().add(cssUrl.toExternalForm());
+            }
+
+            stage.setTitle(APP_NAME + " v" + APP_VERSION + " - " + session.getBranchId() + " (" + staffName + ")");
+            stage.setScene(scene);
+            stage.show();
+        } catch (Exception e) {
+            System.err.println("Failed to transition to POS Sales UI: " + e.getMessage());
         }
     }
 

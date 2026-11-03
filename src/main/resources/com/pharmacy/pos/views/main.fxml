@@ -9,11 +9,12 @@
             prefHeight="800.0" prefWidth="1280.0">
 
     <top>
-        <HBox styleClass="header-bar" spacing="16.0">
+        <HBox styleClass="header-bar" spacing="16.0" alignment="CENTER_LEFT">
             <Label text="Bangladesh Pharmacy ERP &amp; POS" styleClass="brand-title"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="networkStatusLabel" text="Online Authority" styleClass="status-badge-online"/>
-            <Label text="Shift: Active" styleClass="status-badge-online"/>
+            <Label fx:id="shiftStatusBadge" text="Shift: Active" styleClass="status-badge-online"/>
+            <Button text="Lock Counter" styleClass="btn-secondary" onAction="#handleLockCounter"/>
         </HBox>
     </top>
 
@@ -70,7 +71,7 @@
 
     <bottom>
         <HBox style="-fx-background-color: #E5E7EB; -fx-padding: 8px 16px;" spacing="16.0">
-            <Label text="Cashier: cashier-demo | Branch: Dhanmondi Branch"/>
+            <Label fx:id="cashierFooterLabel" text="Cashier: cashier-demo | Branch: Dhanmondi Branch"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label text="Shortcuts: [F2] Scan | [F4] Checkout | [F9] Hold | [Esc] Clear"/>
         </HBox>

@@ -1,0 +1,384 @@
+/* Pharmacy POS | Login Gate
+ * JavaFX 21 compatible stylesheet.
+ * Theme: midnight navy + cobalt + soft slate.
+ * Avoids web-only CSS properties unsupported by JavaFX.
+ */
+
+.terminal-split-root {
+    -fx-background-color: #F7F9FC;
+    -fx-font-family: "System";
+}
+
+/* --------------------- Left / brand rail --------------------- */
+.hero-column {
+    -fx-background-color: linear-gradient(to bottom right, #0C172B 0%, #122643 65%, #183B5B 100%);
+}
+.hero-logo {
+    -fx-background-color: #2563EB;
+    -fx-background-radius: 13;
+}
+.hero-logo-mark {
+    -fx-text-fill: white;
+    -fx-font-size: 31px;
+    -fx-font-weight: bold;
+}
+.hero-brand-name {
+    -fx-text-fill: #F8FAFC;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+.hero-brand-line {
+    -fx-text-fill: #A4B6D0;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+.hero-brand-pill {
+    -fx-text-fill: #BFDBFE;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-background-color: rgba(59,130,246,0.20);
+    -fx-border-color: rgba(147,197,253,0.25);
+    -fx-border-radius: 99;
+    -fx-background-radius: 99;
+    -fx-padding: 5 9 5 9;
+}
+.hero-eyebrow {
+    -fx-text-fill: #69BAFF;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+.hero-app-title {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-line-spacing: 3px;
+}
+.hero-app-subtitle {
+    -fx-text-fill: #B0C3DC;
+    -fx-font-size: 12px;
+    -fx-line-spacing: 4px;
+}
+.hero-info-card {
+    -fx-background-color: rgba(255,255,255,0.055);
+    -fx-border-color: rgba(200,225,255,0.11);
+    -fx-border-radius: 13;
+    -fx-background-radius: 13;
+    -fx-padding: 15 16 15 16;
+}
+.hero-clock-card {
+    -fx-background-color: rgba(35,87,151,0.24);
+    -fx-border-color: rgba(102,173,255,0.18);
+}
+.hero-card-header {
+    -fx-text-fill: #A7C1DE;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+.hero-online-dot,
+.connection-dot {
+    -fx-background-color: #4ADE80;
+    -fx-background-radius: 100;
+    -fx-min-width: 7px;
+    -fx-min-height: 7px;
+    -fx-max-width: 7px;
+    -fx-max-height: 7px;
+}
+.hero-clock-large {
+    -fx-font-size: 37px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #FFFFFF;
+}
+.hero-date-text {
+    -fx-font-size: 12px;
+    -fx-text-fill: #B4CBE7;
+}
+.hero-info-row-label {
+    -fx-text-fill: #9EB1CC;
+    -fx-font-size: 11px;
+}
+.hero-info-row-value {
+    -fx-text-fill: #EDF5FF;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+.hero-connection-status {
+    -fx-text-fill: #83F2A7;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+.hero-shortcuts-card {
+    -fx-background-color: rgba(255,255,255,0.035);
+}
+.hero-shortcut-badge {
+    -fx-background-color: rgba(14,29,51,0.74);
+    -fx-border-color: rgba(181,209,244,0.26);
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-padding: 3 6 3 6;
+    -fx-font-weight: bold;
+    -fx-text-fill: #E8F2FE;
+    -fx-font-size: 10px;
+}
+.hero-shortcut-label {
+    -fx-text-fill: #B8C8DC;
+    -fx-font-size: 10px;
+}
+.hero-footer {
+    -fx-border-color: rgba(200,225,255,0.15) transparent transparent transparent;
+    -fx-padding: 15 0 0 0;
+}
+.hero-footer-symbol {
+    -fx-text-fill: #60A5FA;
+    -fx-font-size: 10px;
+}
+.hero-compliance-text {
+    -fx-text-fill: #9AAFC9;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+/* --------------------- Right / auth area --------------------- */
+.touch-terminal-column {
+    -fx-background-color: #F7F9FC;
+}
+.terminal-eyebrow,
+.section-heading,
+.pin-section-heading {
+    -fx-text-fill: #2563EB;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+.terminal-header-title {
+    -fx-text-fill: #11223D;
+    -fx-font-size: 29px;
+    -fx-font-weight: bold;
+}
+.terminal-header-subtitle {
+    -fx-text-fill: #65748B;
+    -fx-font-size: 12px;
+}
+.lang-toggle-container {
+    -fx-background-color: #E7EDF5;
+    -fx-background-radius: 10;
+    -fx-padding: 4;
+}
+.lang-toggle-btn {
+    -fx-background-color: transparent;
+    -fx-background-radius: 8;
+    -fx-text-fill: #607086;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 11 8 11;
+    -fx-cursor: hand;
+}
+.lang-toggle-btn:hover {
+    -fx-text-fill: #1E40AF;
+}
+.lang-toggle-btn-active {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #1D4ED8;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.10), 7, 0.08, 0, 2);
+}
+.section-count-pill {
+    -fx-background-color: #ECF2F9;
+    -fx-text-fill: #728198;
+    -fx-background-radius: 99;
+    -fx-padding: 5 9 5 9;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+/* Staff cards are HBoxes to preserve the controller's existing @FXML fields. */
+.staff-tile {
+    -fx-min-height: 84px;
+    -fx-pref-height: 84px;
+    -fx-padding: 12 10 12 10;
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 13;
+    -fx-border-color: #E1E7F0;
+    -fx-border-radius: 13;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+.staff-tile:hover {
+    -fx-border-color: #9CC3FF;
+    -fx-background-color: #FCFDFF;
+}
+.staff-tile:focused {
+    -fx-border-color: #2563EB;
+}
+.staff-tile-active,
+.staff-tile-active:hover {
+    -fx-background-color: #EEF5FF;
+    -fx-border-color: #3B82F6;
+    -fx-border-width: 1.5;
+    -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.12), 12, 0.08, 0, 3);
+}
+.avatar-circle {
+    -fx-pref-width: 43px;
+    -fx-pref-height: 43px;
+    -fx-max-width: 43px;
+    -fx-max-height: 43px;
+    -fx-background-color: #DCEAFE;
+    -fx-background-radius: 12;
+}
+.avatar-initials {
+    -fx-text-fill: #2358CC;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+.avatar-mint { -fx-background-color: #D9F8EC; }
+.avatar-violet { -fx-background-color: #EDE7FF; }
+.avatar-initials-mint { -fx-text-fill: #078765; }
+.avatar-initials-violet { -fx-text-fill: #7952CA; }
+.staff-tile-name {
+    -fx-font-size: 12px;
+    -fx-text-fill: #182B45;
+    -fx-font-weight: bold;
+}
+.staff-tile-role {
+    -fx-font-size: 10px;
+    -fx-text-fill: #748298;
+}
+
+/* PIN indicator: blank by default; add pin-dot-filled from the controller. */
+.pin-entry-panel {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 15;
+    -fx-border-color: #E2EAF4;
+    -fx-border-radius: 15;
+    -fx-padding: 14 18 14 18;
+}
+.pin-section-heading {
+    -fx-text-fill: #77859D;
+}
+.selected-staff-name {
+    -fx-text-fill: #172E4D;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+.pin-display-card {
+    -fx-padding: 3 5 3 5;
+}
+.pin-dot {
+    -fx-min-width: 13px;
+    -fx-min-height: 13px;
+    -fx-pref-width: 13px;
+    -fx-pref-height: 13px;
+    -fx-max-width: 13px;
+    -fx-max-height: 13px;
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 99;
+    -fx-border-color: #9AACBF;
+    -fx-border-width: 2;
+    -fx-border-radius: 99;
+}
+.pin-dot-filled {
+    -fx-background-color: #2563EB;
+    -fx-border-color: #2563EB;
+}
+
+/* 3x4 touch keypad; 52px tall hit targets at 1280x800. */
+.numpad-grid {
+    -fx-alignment: center;
+}
+.numpad-key {
+    -fx-min-width: 86px;
+    -fx-pref-width: 86px;
+    -fx-max-width: 86px;
+    -fx-min-height: 52px;
+    -fx-pref-height: 52px;
+    -fx-max-height: 52px;
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 11;
+    -fx-border-color: #DCE5F0;
+    -fx-border-radius: 11;
+    -fx-text-fill: #172C47;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+.numpad-key:hover {
+    -fx-background-color: #EFF6FF;
+    -fx-border-color: #93C5FD;
+}
+.numpad-key:pressed {
+    -fx-background-color: #DCEBFF;
+}
+.numpad-key:focused {
+    -fx-border-color: #3B82F6;
+}
+.numpad-key-action {
+    -fx-background-color: #EAF0F7;
+    -fx-text-fill: #51647E;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* Shift details and call to action */
+.shift-meta-pill {
+    -fx-background-color: #EFF3F8;
+    -fx-background-radius: 8;
+    -fx-text-fill: #5E7088;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 11 8 11;
+}
+.offline-toggle {
+    -fx-cursor: hand;
+    -fx-border-color: #DDE6F0;
+    -fx-border-radius: 8;
+    -fx-background-color: #FFFFFF;
+}
+.offline-toggle:hover {
+    -fx-background-color: #EDF5FF;
+    -fx-text-fill: #2563EB;
+}
+.status-message {
+    -fx-text-fill: #5D728C;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+.btn-unlock-large {
+    -fx-min-height: 53px;
+    -fx-pref-height: 53px;
+    -fx-background-color: linear-gradient(to right, #2563EB 0%, #1D4ED8 100%);
+    -fx-background-radius: 12;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.23), 16, 0.12, 0, 6);
+    -fx-cursor: hand;
+}
+.btn-unlock-large:hover {
+    -fx-background-color: #1D4ED8;
+}
+.btn-unlock-large:pressed {
+    -fx-background-color: #1E40AF;
+}
+.btn-unlock-large:disabled {
+    -fx-opacity: 0.55;
+    -fx-effect: none;
+}
+.status-message-error {
+    -fx-text-fill: #B91C1C;
+}
+.status-message-success {
+    -fx-text-fill: #15803D;
+}
+.offline-toggle-active {
+    -fx-background-color: #FFF7ED;
+    -fx-border-color: #FDBA74;
+    -fx-text-fill: #C2410C;
+}
+.terminal-bottom-note {
+    -fx-opacity: 0.96;
+}
+.terminal-note-dot {
+    -fx-text-fill: #3B82F6;
+    -fx-font-size: 10px;
+}
+.terminal-note-text {
+    -fx-text-fill: #8A98AA;
+    -fx-font-size: 10px;
+}
