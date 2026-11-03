@@ -140,3 +140,4 @@ public class PosStorageConditionalClientTest {
         assertEquals("Quarantine Immediately for Assessment", client.getActionDisplay("QUARANTINE_IMMEDIATELY", "en"));
     }
 }
+
