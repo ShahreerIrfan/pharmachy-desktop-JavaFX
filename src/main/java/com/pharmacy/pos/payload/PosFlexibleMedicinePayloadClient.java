@@ -72,6 +72,12 @@ public class PosFlexibleMedicinePayloadClient {
         specifics.put("DEVICE_CONSUMABLE", new HashSet<>(Arrays.asList(
                 "device_type", "is_sterile", "gauge_size"
         )));
+        specifics.put("SYRUP_SUSPENSION", new HashSet<>(Arrays.asList(
+                "bottle_size_ml", "is_dry_powder", "reconstituted_expiry_days"
+        )));
+        specifics.put("INJECTION_INFUSION", new HashSet<>(Arrays.asList(
+                "vial_volume_ml", "is_lyophilized", "diluent_required"
+        )));
         FORM_SPECIFIC_ATTRIBUTES = Collections.unmodifiableMap(specifics);
 
         Map<String, Set<String>> mandatory = new HashMap<>();
