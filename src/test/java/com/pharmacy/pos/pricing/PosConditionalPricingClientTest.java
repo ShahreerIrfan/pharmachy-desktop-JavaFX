@@ -150,3 +150,4 @@ public class PosConditionalPricingClientTest {
         assertEquals("UNKNOWN_UNIT", client.getUnitDisplay("UNKNOWN_UNIT", "bn"));
     }
 }
+
