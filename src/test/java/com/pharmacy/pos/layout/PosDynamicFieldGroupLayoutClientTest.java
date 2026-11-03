@@ -173,3 +173,4 @@ public class PosDynamicFieldGroupLayoutClientTest {
         assertEquals("ERR_INVALID_TEMPERATURE_RANGE", errors.get(0).errorCode);
     }
 }
+

@@ -242,3 +242,4 @@ public class PosDynamicFieldGroupLayoutClient {
         return errors;
     }
 }
+
