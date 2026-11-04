@@ -396,3 +396,4 @@ public class PosLooseTabletSalesClient {
         return true;
     }
 }
+

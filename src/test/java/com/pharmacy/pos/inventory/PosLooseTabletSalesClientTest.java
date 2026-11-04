@@ -243,3 +243,4 @@ public class PosLooseTabletSalesClientTest {
         assertEquals(30, batch.quantityBaseUnits); // Restored back to 30
     }
 }
+
