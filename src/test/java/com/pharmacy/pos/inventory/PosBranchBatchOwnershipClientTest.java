@@ -144,3 +144,4 @@ public class PosBranchBatchOwnershipClientTest {
         assertEquals("ERR_PERMISSION_DENIED", cashierSummaryRes.errorCode);
     }
 }
+
