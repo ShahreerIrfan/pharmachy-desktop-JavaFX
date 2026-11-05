@@ -14,13 +14,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * PosSupplierOrganizationClientTest
- * Architecture Decision: ADR-0181 (P181).
+ * Architecture Decision: ADR-0181 (P181) & ADR-0182 (P182).
  * Phase 10: Suppliers, Purchase Orders & Supply Chain.
  */
 class PosSupplierOrganizationClientTest {
 
     private Map<String, PosSupplierOrganizationClient.SupplierDto> supplierStore;
     private List<PosSupplierOrganizationClient.SupplierLedgerEntryDto> ledgerStore;
+    private Map<String, PosSupplierOrganizationClient.SupplierContactPersonDto> contactStore;
     private PosSupplierOrganizationClient managerClient;
     private PosSupplierOrganizationClient cashierClient;
     private PosSupplierOrganizationClient foreignClient;
@@ -29,15 +30,16 @@ class PosSupplierOrganizationClientTest {
     void setUp() {
         supplierStore = new HashMap<>();
         ledgerStore = new ArrayList<>();
+        contactStore = new HashMap<>();
 
         managerClient = new PosSupplierOrganizationClient(
-                "tenant-alpha", "branch-main", "BRANCH_MANAGER", "user-mgr-1", false, supplierStore, ledgerStore
+                "tenant-alpha", "branch-main", "BRANCH_MANAGER", "user-mgr-1", false, supplierStore, ledgerStore, contactStore
         );
         cashierClient = new PosSupplierOrganizationClient(
-                "tenant-alpha", "branch-main", "CASHIER", "user-csh-1", false, supplierStore, ledgerStore
+                "tenant-alpha", "branch-main", "CASHIER", "user-csh-1", false, supplierStore, ledgerStore, contactStore
         );
         foreignClient = new PosSupplierOrganizationClient(
-                "tenant-beta", "branch-north", "BRANCH_MANAGER", "user-mgr-2", false, supplierStore, ledgerStore
+                "tenant-beta", "branch-north", "BRANCH_MANAGER", "user-mgr-2", false, supplierStore, ledgerStore, contactStore
         );
     }
 
@@ -168,5 +170,83 @@ class PosSupplierOrganizationClientTest {
         // Foreign tenant cannot access supplier
         assertThrows(SecurityException.class, () -> foreignClient.getSupplier(supplier.supplierId));
     }
-}
 
+    @Test
+    @DisplayName("Test 5: Multiple contact persons and atomic primary representative reassignment")
+    void testSupplierContactPersonsAndPrimaryReassignment() {
+        PosSupplierOrganizationClient.SupplierDto supplier = managerClient.createSupplier(
+                "Healthcare Pharmaceuticals Depot", "Healthcare PLC", "017", "e@x.com", "DHAKA", "DL", "BIN", "TIN", "TRAD", 30, BigDecimal.ZERO
+        );
+
+        // Contact 1: Territory Sales Officer (Primary)
+        PosSupplierOrganizationClient.SupplierContactPersonDto c1 = managerClient.createSupplierContact(
+                supplier.supplierId,
+                "Md. Kamrul Hasan",
+                "Territory Sales Executive",
+                "SALES_REPRESENTATIVE",
+                "+8801711001122",
+                "",
+                "kamrul.hasan@hpl.com.bd",
+                "WHATSAPP",
+                true,
+                "Available 9 AM - 6 PM"
+        );
+        assertTrue(c1.isPrimary);
+        assertEquals("SALES_REPRESENTATIVE", c1.role);
+        assertEquals("WHATSAPP", c1.preferredCommunicationMethod);
+
+        // Contact 2: Depot In-Charge (Set as Primary)
+        PosSupplierOrganizationClient.SupplierContactPersonDto c2 = managerClient.createSupplierContact(
+                supplier.supplierId,
+                "Engr. Tariqul Islam",
+                "Depot In-Charge",
+                "DEPOT_MANAGER",
+                "+8801811223344",
+                "",
+                "tariqul@hpl.com.bd",
+                "PHONE",
+                true,
+                "Emergency dispatch escalations"
+        );
+        assertTrue(c2.isPrimary);
+
+        // Invariant: c1 is no longer primary
+        PosSupplierOrganizationClient.SupplierContactPersonDto c1Refreshed = managerClient.getSupplierContact(c1.contactId);
+        assertFalse(c1Refreshed.isPrimary);
+
+        // List contacts
+        List<PosSupplierOrganizationClient.SupplierContactPersonDto> contacts = managerClient.listSupplierContacts(supplier.supplierId, null);
+        assertEquals(2, contacts.size());
+        assertEquals(c2.contactId, contacts.get(0).contactId); // Primary sorted first
+
+        // Update contact
+        managerClient.updateSupplierContact(c1.contactId, "+8801799999999", "ORDER_BOOKER", false);
+        assertEquals("+8801799999999", c1Refreshed.phone);
+        assertEquals("ORDER_BOOKER", c1Refreshed.role);
+
+        // Archive contact
+        managerClient.archiveSupplierContact(c1.contactId);
+        assertFalse(c1Refreshed.isActive);
+    }
+
+    @Test
+    @DisplayName("Test 6: Contact persons RBAC and cross-tenant boundary")
+    void testContactPersonsRbacAndCrossTenant() {
+        PosSupplierOrganizationClient.SupplierDto supplier = managerClient.createSupplier(
+                "Popular Pharma Depot", "Popular Ltd", "017", "e@x.com", "DHAKA", "DL", "BIN", "TIN", "TRAD", 30, BigDecimal.ZERO
+        );
+
+        // Cashier cannot create contact
+        assertThrows(SecurityException.class, () -> cashierClient.createSupplierContact(
+                supplier.supplierId, "Contact A", "Officer", "SALES_REPRESENTATIVE", "017", "", "", "PHONE", false, ""
+        ));
+
+        // Create contact under manager
+        PosSupplierOrganizationClient.SupplierContactPersonDto contact = managerClient.createSupplierContact(
+                supplier.supplierId, "Contact B", "Officer", "SALES_REPRESENTATIVE", "017", "", "", "PHONE", false, ""
+        );
+
+        // Foreign tenant cannot access contact
+        assertThrows(SecurityException.class, () -> foreignClient.getSupplierContact(contact.contactId));
+    }
+}

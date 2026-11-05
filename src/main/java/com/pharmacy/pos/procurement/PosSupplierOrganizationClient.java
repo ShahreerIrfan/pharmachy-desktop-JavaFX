@@ -7,11 +7,11 @@ import java.util.*;
 
 /**
  * PosSupplierOrganizationClient
- * Architecture Decision: ADR-0181 (P181).
+ * Architecture Decision: ADR-0181 (P181) & ADR-0182 (P182).
  * Phase 10: Suppliers, Purchase Orders & Supply Chain.
  *
  * Desktop POS client governing supplier organizations, legal credentials,
- * NBR TIN/BIN, wholesale drug license, AP ledger postings, and authentic origin verification.
+ * multiple contact persons, functional roles, AP ledger postings, and authentic origin verification.
  */
 public class PosSupplierOrganizationClient {
 
@@ -22,6 +22,7 @@ public class PosSupplierOrganizationClient {
     private final boolean isOffline;
     private final Map<String, SupplierDto> supplierStore;
     private final List<SupplierLedgerEntryDto> ledgerStore;
+    private final Map<String, SupplierContactPersonDto> contactStore;
 
     private static final Set<String> ALLOWED_PROCUREMENT_ROLES = Set.of(
             "BRANCH_MANAGER", "PHARMACY_OWNER", "SUPERADMIN", "STAFF_PHARMACIST", "PROCUREMENT_OFFICER", "AUDITOR"
@@ -35,6 +36,18 @@ public class PosSupplierOrganizationClient {
             boolean isOffline,
             Map<String, SupplierDto> supplierStore,
             List<SupplierLedgerEntryDto> ledgerStore) {
+        this(tenantId, branchId, userRole, userId, isOffline, supplierStore, ledgerStore, new HashMap<>());
+    }
+
+    public PosSupplierOrganizationClient(
+            String tenantId,
+            String branchId,
+            String userRole,
+            String userId,
+            boolean isOffline,
+            Map<String, SupplierDto> supplierStore,
+            List<SupplierLedgerEntryDto> ledgerStore,
+            Map<String, SupplierContactPersonDto> contactStore) {
         this.tenantId = tenantId != null ? tenantId : "";
         this.branchId = branchId != null ? branchId : "";
         this.userRole = userRole != null ? userRole : "CASHIER";
@@ -42,6 +55,7 @@ public class PosSupplierOrganizationClient {
         this.isOffline = isOffline;
         this.supplierStore = supplierStore != null ? supplierStore : new HashMap<>();
         this.ledgerStore = ledgerStore != null ? ledgerStore : new ArrayList<>();
+        this.contactStore = contactStore != null ? contactStore : new HashMap<>();
     }
 
     public static final class SupplierDto {
@@ -133,6 +147,57 @@ public class PosSupplierOrganizationClient {
             this.proofOfOriginVerified = proofOfOriginVerified;
             this.proofOfOriginNotes = proofOfOriginNotes;
             this.isActive = isActive;
+            this.createdAt = createdAt != null ? createdAt : Instant.now();
+        }
+    }
+
+    public static final class SupplierContactPersonDto {
+        public final String contactId;
+        public final String tenantId;
+        public final String supplierId;
+        public String name;
+        public String nameBn;
+        public String designation;
+        public String role;
+        public String phone;
+        public String alternatePhone;
+        public String email;
+        public String preferredCommunicationMethod;
+        public boolean isPrimary;
+        public boolean isActive;
+        public String notes;
+        public final Instant createdAt;
+
+        public SupplierContactPersonDto(
+                String contactId,
+                String tenantId,
+                String supplierId,
+                String name,
+                String nameBn,
+                String designation,
+                String role,
+                String phone,
+                String alternatePhone,
+                String email,
+                String preferredCommunicationMethod,
+                boolean isPrimary,
+                boolean isActive,
+                String notes,
+                Instant createdAt) {
+            this.contactId = contactId;
+            this.tenantId = tenantId;
+            this.supplierId = supplierId;
+            this.name = name;
+            this.nameBn = nameBn;
+            this.designation = designation;
+            this.role = role;
+            this.phone = phone;
+            this.alternatePhone = alternatePhone;
+            this.email = email;
+            this.preferredCommunicationMethod = preferredCommunicationMethod;
+            this.isPrimary = isPrimary;
+            this.isActive = isActive;
+            this.notes = notes;
             this.createdAt = createdAt != null ? createdAt : Instant.now();
         }
     }
@@ -272,6 +337,130 @@ public class PosSupplierOrganizationClient {
         return list;
     }
 
+    // =========================================================================
+    // SUPPLIER CONTACT PERSONS (P182)
+    // =========================================================================
+
+    public SupplierContactPersonDto createSupplierContact(
+            String supplierId,
+            String name,
+            String designation,
+            String role,
+            String phone,
+            String alternatePhone,
+            String email,
+            String preferredCommunicationMethod,
+            boolean isPrimary,
+            String notes) {
+        assertProcurementRole();
+        SupplierDto supplier = getSupplier(supplierId);
+
+        if (name == null || name.trim().length() < 2) {
+            throw new IllegalArgumentException("ERR_MISSING_CONTACT_NAME: Contact name must be at least 2 characters.");
+        }
+        if (phone == null || phone.trim().isEmpty()) {
+            throw new IllegalArgumentException("ERR_MISSING_CONTACT_PHONE: Contact phone number is required.");
+        }
+
+        if (isPrimary) {
+            // Unset isPrimary on existing contacts for this supplier
+            for (SupplierContactPersonDto c : contactStore.values()) {
+                if (this.tenantId.equals(c.tenantId) && supplierId.equals(c.supplierId) && c.isPrimary) {
+                    c.isPrimary = false;
+                }
+            }
+        }
+
+        String contactId = "sup-cnt-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        SupplierContactPersonDto contact = new SupplierContactPersonDto(
+                contactId,
+                this.tenantId,
+                supplierId,
+                name.trim(),
+                "",
+                designation != null ? designation.trim() : "",
+                role != null ? role.toUpperCase() : "SALES_REPRESENTATIVE",
+                phone.trim(),
+                alternatePhone != null ? alternatePhone.trim() : "",
+                email != null ? email.trim() : "",
+                preferredCommunicationMethod != null ? preferredCommunicationMethod.toUpperCase() : "PHONE",
+                isPrimary,
+                true,
+                notes != null ? notes.trim() : "",
+                Instant.now()
+        );
+
+        contactStore.put(contact.contactId, contact);
+        return contact;
+    }
+
+    public SupplierContactPersonDto getSupplierContact(String contactId) {
+        SupplierContactPersonDto c = contactStore.get(contactId);
+        if (c == null) {
+            throw new NoSuchElementException("ERR_CONTACT_NOT_FOUND: Contact not found: " + contactId);
+        }
+        if (!this.tenantId.equals(c.tenantId)) {
+            throw new SecurityException("ERR_CROSS_TENANT_ACCESS: Cross-tenant contact access forbidden.");
+        }
+        return c;
+    }
+
+    public List<SupplierContactPersonDto> listSupplierContacts(String supplierId, String roleFilter) {
+        getSupplier(supplierId); // Assert tenant and supplier exist
+        List<SupplierContactPersonDto> list = new ArrayList<>();
+        for (SupplierContactPersonDto c : contactStore.values()) {
+            if (this.tenantId.equals(c.tenantId) && supplierId.equals(c.supplierId)) {
+                if (roleFilter == null || roleFilter.equalsIgnoreCase(c.role)) {
+                    list.add(c);
+                }
+            }
+        }
+        list.sort((a, b) -> {
+            if (a.isPrimary != b.isPrimary) {
+                return a.isPrimary ? -1 : 1;
+            }
+            return a.name.compareTo(b.name);
+        });
+        return list;
+    }
+
+    public SupplierContactPersonDto updateSupplierContact(
+            String contactId,
+            String newPhone,
+            String newRole,
+            Boolean setPrimary) {
+        assertProcurementRole();
+        SupplierContactPersonDto c = getSupplierContact(contactId);
+
+        if (newPhone != null) {
+            if (newPhone.trim().isEmpty()) {
+                throw new IllegalArgumentException("ERR_MISSING_CONTACT_PHONE: Phone cannot be empty.");
+            }
+            c.phone = newPhone.trim();
+        }
+        if (newRole != null) {
+            c.role = newRole.toUpperCase();
+        }
+        if (Boolean.TRUE.equals(setPrimary) && !c.isPrimary) {
+            for (SupplierContactPersonDto other : contactStore.values()) {
+                if (this.tenantId.equals(other.tenantId) && c.supplierId.equals(other.supplierId) && other.isPrimary) {
+                    other.isPrimary = false;
+                }
+            }
+            c.isPrimary = true;
+        }
+
+        return c;
+    }
+
+    public SupplierContactPersonDto archiveSupplierContact(String contactId) {
+        assertProcurementRole();
+        SupplierContactPersonDto c = getSupplierContact(contactId);
+        c.isActive = false;
+        c.isPrimary = false;
+        return c;
+    }
+
     public SupplierLedgerEntryDto postApLedgerEntry(
             String supplierId,
             String postingType,
@@ -330,4 +519,3 @@ public class PosSupplierOrganizationClient {
         return isOffline;
     }
 }
-
