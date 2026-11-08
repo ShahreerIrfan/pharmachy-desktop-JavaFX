@@ -56,6 +56,8 @@ public class PosPurchaseOrderClient {
         public final int orderedPackages;
         public final int orderedQuantity;
         public int receivedQuantity;
+        public int cancelledQuantity;
+        public String deliveryStatus;
         public final BigDecimal unitCostPrice;
         public final BigDecimal packageCostPrice;
         public final BigDecimal mrpUnit;
@@ -113,6 +115,18 @@ public class PosPurchaseOrderClient {
             this.expectedDeliveryDate = expectedDeliveryDate;
             this.freeGoodsBonusQuantity = Math.max(0, freeGoodsBonusQuantity);
             this.notes = notes != null ? notes : "";
+            this.cancelledQuantity = 0;
+            if (this.receivedQuantity >= this.orderedQuantity) {
+                this.deliveryStatus = "FULLY_DELIVERED";
+            } else if (this.receivedQuantity > 0) {
+                this.deliveryStatus = "PARTIALLY_DELIVERED";
+            } else {
+                this.deliveryStatus = "PENDING";
+            }
+        }
+
+        public int getBackorderedQuantity() {
+            return Math.max(0, orderedQuantity - receivedQuantity - cancelledQuantity);
         }
 
         public PurchaseOrderItemDto(
@@ -418,6 +432,11 @@ public class PosPurchaseOrderClient {
                     int addQty = itemReceipts.get(item.itemId);
                     if (addQty > 0) {
                         item.receivedQuantity += addQty;
+                        if ((item.receivedQuantity + item.cancelledQuantity) >= item.orderedQuantity) {
+                            item.deliveryStatus = "FULLY_DELIVERED";
+                        } else if (item.receivedQuantity > 0) {
+                            item.deliveryStatus = "PARTIALLY_DELIVERED";
+                        }
                     }
                 }
             }
@@ -470,6 +489,98 @@ public class PosPurchaseOrderClient {
                 closedAt,
                 closingNotes,
                 null, null, "",
+                existing.notes,
+                existing.isActive,
+                existing.items,
+                existing.createdAt
+        );
+
+        poStore.put(poId, updated);
+        return updated;
+    }
+
+    public PurchaseOrderDto cancelBackorder(String poId, String itemId, int cancelQuantity, String reason) {
+        checkApprovalRole();
+        PurchaseOrderDto existing = poStore.get(poId);
+        if (existing == null) {
+            throw new NoSuchElementException("ERR_PO_NOT_FOUND: Purchase order " + poId + " not found");
+        }
+        if (!existing.tenantId.equals(tenantId)) {
+            throw new SecurityException("ERR_CROSS_TENANT_ACCESS: Cross-tenant PO backorder cancellation forbidden");
+        }
+        if (!"ORDERED".equals(existing.status) && !"PARTIALLY_RECEIVED".equals(existing.status)) {
+            throw new IllegalStateException("ERR_PO_NOT_MODIFIABLE: Cannot cancel backorders on PO in status " + existing.status);
+        }
+
+        PurchaseOrderItemDto targetItem = null;
+        for (PurchaseOrderItemDto item : existing.items) {
+            if (item.itemId.equals(itemId)) {
+                targetItem = item;
+                break;
+            }
+        }
+        if (targetItem == null) {
+            throw new NoSuchElementException("ERR_PO_ITEM_NOT_FOUND: PO item " + itemId + " not found");
+        }
+
+        int currentBackorder = targetItem.getBackorderedQuantity();
+        if (cancelQuantity <= 0 || cancelQuantity > currentBackorder) {
+            throw new IllegalArgumentException("ERR_INVALID_CANCEL_QUANTITY: Cannot cancel " + cancelQuantity + "; backordered is " + currentBackorder);
+        }
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new IllegalArgumentException("ERR_MISSING_CANCEL_REASON: Cancellation reason is required");
+        }
+
+        targetItem.cancelledQuantity += cancelQuantity;
+        if ((targetItem.receivedQuantity + targetItem.cancelledQuantity) >= targetItem.orderedQuantity) {
+            targetItem.deliveryStatus = targetItem.receivedQuantity > 0 ? "FULLY_DELIVERED" : "CANCELLED";
+        } else {
+            targetItem.deliveryStatus = "PARTIALLY_DELIVERED";
+        }
+
+        boolean allFulfilled = true;
+        for (PurchaseOrderItemDto item : existing.items) {
+            if ((item.receivedQuantity + item.cancelledQuantity) < item.orderedQuantity) {
+                allFulfilled = false;
+                break;
+            }
+        }
+
+        String newStatus = existing.status;
+        Instant closedAt = existing.closedAt;
+        String closingNotes = existing.closingNotes;
+        if (allFulfilled) {
+            newStatus = "CLOSED";
+            closedAt = Instant.now();
+            closingNotes = "Closed after backorder cancellation: " + reason.trim();
+        }
+
+        PurchaseOrderDto updated = new PurchaseOrderDto(
+                existing.poId,
+                existing.poNumber,
+                existing.tenantId,
+                existing.branchId,
+                existing.branchName,
+                existing.supplierId,
+                existing.supplierName,
+                existing.requisitionId,
+                newStatus,
+                existing.paymentTermsDays,
+                existing.currency,
+                existing.subtotalAmount,
+                existing.discountAmount,
+                existing.taxAmount,
+                existing.totalAmount,
+                existing.expectedDeliveryDate,
+                existing.orderedAt,
+                existing.approvedById,
+                existing.approvedAt,
+                existing.approvalNotes,
+                closedAt,
+                closingNotes,
+                existing.cancelledById,
+                existing.cancelledAt,
+                existing.cancellationReason,
                 existing.notes,
                 existing.isActive,
                 existing.items,

@@ -64,6 +64,9 @@ public class PosGoodsReceiptClient {
         public final BigDecimal taxPercentage;
         public final BigDecimal lineTotal;
         public final String storageLocation;
+        public final boolean isBonusGoods;
+        public final int excessQuantity;
+        public final String excessReason;
         public boolean isFullyAllocated;
 
         public GoodsReceiptLineDto(
@@ -83,7 +86,10 @@ public class PosGoodsReceiptClient {
                 BigDecimal mrpUnit,
                 BigDecimal discountPercentage,
                 BigDecimal taxPercentage,
-                String storageLocation) {
+                String storageLocation,
+                boolean isBonusGoods,
+                int excessQuantity,
+                String excessReason) {
             this.lineId = lineId != null ? lineId : "grnl-" + UUID.randomUUID().toString().substring(0, 8);
             this.poItemId = poItemId;
             this.productId = productId != null ? productId : "";
@@ -101,18 +107,51 @@ public class PosGoodsReceiptClient {
                 calcUnits = this.receivedPackages * this.packageSize;
             }
             this.receivedQuantityBaseUnits = Math.max(1, calcUnits);
-            this.unitCost = unitCost != null ? unitCost.setScale(4, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
-            this.mrpUnit = mrpUnit != null ? mrpUnit.setScale(4, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
-            this.discountPercentage = discountPercentage != null ? discountPercentage.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
-            this.taxPercentage = taxPercentage != null ? taxPercentage.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+            this.isBonusGoods = isBonusGoods;
+            this.excessQuantity = Math.max(0, excessQuantity);
+            this.excessReason = excessReason != null ? excessReason : "";
 
-            BigDecimal discountFactor = BigDecimal.ONE.subtract(this.discountPercentage.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP));
-            BigDecimal netCost = this.unitCost.multiply(discountFactor).setScale(4, RoundingMode.HALF_UP);
-            BigDecimal subtotal = netCost.multiply(BigDecimal.valueOf(this.receivedQuantityBaseUnits)).setScale(4, RoundingMode.HALF_UP);
-            BigDecimal taxAmount = subtotal.multiply(this.taxPercentage.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)).setScale(4, RoundingMode.HALF_UP);
-            this.lineTotal = subtotal.add(taxAmount).setScale(4, RoundingMode.HALF_UP);
+            if (isBonusGoods) {
+                this.unitCost = BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+                this.mrpUnit = mrpUnit != null ? mrpUnit.setScale(4, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+                this.discountPercentage = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+                this.taxPercentage = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+                this.lineTotal = BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+            } else {
+                this.unitCost = unitCost != null ? unitCost.setScale(4, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+                this.mrpUnit = mrpUnit != null ? mrpUnit.setScale(4, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+                this.discountPercentage = discountPercentage != null ? discountPercentage.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+                this.taxPercentage = taxPercentage != null ? taxPercentage.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+
+                BigDecimal discountFactor = BigDecimal.ONE.subtract(this.discountPercentage.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP));
+                BigDecimal netCost = this.unitCost.multiply(discountFactor).setScale(4, RoundingMode.HALF_UP);
+                BigDecimal subtotal = netCost.multiply(BigDecimal.valueOf(this.receivedQuantityBaseUnits)).setScale(4, RoundingMode.HALF_UP);
+                BigDecimal taxAmount = subtotal.multiply(this.taxPercentage.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)).setScale(4, RoundingMode.HALF_UP);
+                this.lineTotal = subtotal.add(taxAmount).setScale(4, RoundingMode.HALF_UP);
+            }
             this.storageLocation = storageLocation != null ? storageLocation : "MAIN_RACK";
             this.isFullyAllocated = false;
+        }
+
+        public GoodsReceiptLineDto(
+                String lineId,
+                String poItemId,
+                String productId,
+                String productBrandName,
+                String batchNumber,
+                LocalDate expiryDate,
+                LocalDate mfgDate,
+                String packUnit,
+                int packageSize,
+                int receivedPackages,
+                int orderedQuantityBaseUnits,
+                int receivedQuantityBaseUnits,
+                BigDecimal unitCost,
+                BigDecimal mrpUnit,
+                BigDecimal discountPercentage,
+                BigDecimal taxPercentage,
+                String storageLocation) {
+            this(lineId, poItemId, productId, productBrandName, batchNumber, expiryDate, mfgDate, packUnit, packageSize, receivedPackages, orderedQuantityBaseUnits, receivedQuantityBaseUnits, unitCost, mrpUnit, discountPercentage, taxPercentage, storageLocation, false, 0, "");
         }
     }
 
@@ -213,6 +252,24 @@ public class PosGoodsReceiptClient {
             String proofOfOrigin,
             String notes,
             List<GoodsReceiptLineDto> lines) {
+        return createGrn(purchaseOrderId, supplierId, supplierName, challanNumber, challanDate, receiptDate, storageCondition, storageTemperatureCelsius, storageCheckPassed, proofOfOrigin, notes, false, "", lines);
+    }
+
+    public GoodsReceiptDto createGrn(
+            String purchaseOrderId,
+            String supplierId,
+            String supplierName,
+            String challanNumber,
+            LocalDate challanDate,
+            LocalDate receiptDate,
+            String storageCondition,
+            BigDecimal storageTemperatureCelsius,
+            boolean storageCheckPassed,
+            String proofOfOrigin,
+            String notes,
+            boolean allowExcess,
+            String excessReason,
+            List<GoodsReceiptLineDto> lines) {
         checkProcurementRole();
 
         if (lines == null || lines.isEmpty()) {
@@ -266,10 +323,10 @@ public class PosGoodsReceiptClient {
             if (line.expiryDate.isBefore(today) || line.expiryDate.isEqual(today)) {
                 throw new IllegalArgumentException("ERR_EXPIRED_BATCH_RECEIVED: Batch " + line.batchNumber + " is expired");
             }
-            if (line.unitCost.compareTo(BigDecimal.ZERO) <= 0) {
+            if (!line.isBonusGoods && line.unitCost.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new IllegalArgumentException("ERR_INVALID_COST: Unit cost must be positive");
             }
-            if (line.mrpUnit.compareTo(BigDecimal.ZERO) > 0 && line.unitCost.compareTo(line.mrpUnit) > 0) {
+            if (!line.isBonusGoods && line.mrpUnit.compareTo(BigDecimal.ZERO) > 0 && line.unitCost.compareTo(line.mrpUnit) > 0) {
                 throw new IllegalArgumentException("ERR_COST_EXCEEDS_MRP: Unit cost cannot exceed retail price");
             }
 
@@ -283,9 +340,20 @@ public class PosGoodsReceiptClient {
                     }
                 }
                 if (poItem != null) {
-                    int remaining = poItem.orderedQuantity - poItem.receivedQuantity;
+                    int remaining = poItem.getBackorderedQuantity();
                     if (line.receivedQuantityBaseUnits > remaining) {
-                        throw new IllegalArgumentException("ERR_EXCESS_RECEIPT: Received quantity (" + line.receivedQuantityBaseUnits + ") exceeds remaining unreceived quantity (" + remaining + ") on PO item");
+                        if (line.isBonusGoods) {
+                            // Bonus promotional goods permitted
+                        } else if (allowExcess) {
+                            if (!"BRANCH_MANAGER".equals(userRole) && !"PHARMACY_OWNER".equals(userRole) && !"SUPERADMIN".equals(userRole)) {
+                                throw new SecurityException("ERR_STAFF_ROLE_DENIED: Only Managers and Owners can authorize excess delivery");
+                            }
+                            if (excessReason == null || excessReason.trim().isEmpty()) {
+                                throw new IllegalArgumentException("ERR_MISSING_EXCESS_REASON: Managerial excess reason is required");
+                            }
+                        } else {
+                            throw new IllegalArgumentException("ERR_EXCESS_RECEIPT: Received quantity (" + line.receivedQuantityBaseUnits + ") exceeds remaining unreceived quantity (" + remaining + ") on PO item");
+                        }
                     }
                 }
             }
@@ -431,6 +499,13 @@ public class PosGoodsReceiptClient {
         }
         list.sort((a, b) -> b.createdAt.compareTo(a.createdAt));
         return list;
+    }
+
+    public PosPurchaseOrderClient.PurchaseOrderDto cancelPoBackorder(String poId, String itemId, int cancelQuantity, String reason) {
+        if (poClient == null) {
+            throw new IllegalStateException("ERR_PO_CLIENT_NOT_CONFIGURED: Purchase order client is required");
+        }
+        return poClient.cancelBackorder(poId, itemId, cancelQuantity, reason);
     }
 }
 
