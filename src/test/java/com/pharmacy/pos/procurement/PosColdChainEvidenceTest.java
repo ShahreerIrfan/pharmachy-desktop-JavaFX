@@ -394,3 +394,4 @@ public class PosColdChainEvidenceTest {
         assertEquals(BigDecimal.ZERO.setScale(4), grn.apInvoiceAmount);
     }
 }
+
