@@ -435,3 +435,4 @@ public class PosSupplierInvoiceMatchingTest {
         assertThrows(IllegalStateException.class, () -> invoiceClient.postInvoiceToAp(invoice.invoiceId));
     }
 }
+
