@@ -45,6 +45,76 @@ public class PosGoodsReceiptClient {
         this.poClient = poClient;
     }
 
+    public static final class ColdChainEvidenceDto {
+        public final String evidenceId;
+        public final String grnId;
+        public final String lineId;
+        public final String productId;
+        public final String batchNumber;
+        public final String loggerSerialNumber;
+        public final BigDecimal recordedTemperatureCelsius;
+        public final BigDecimal minTemperatureCelsius;
+        public final BigDecimal maxTemperatureCelsius;
+        public final boolean excursionDetected;
+        public final int excursionDurationMinutes;
+        public final String packagingCondition;
+        public final String carrierName;
+        public final String vehicleType;
+        public final String proofAttachmentReference;
+        public final String inspectionNotes;
+        public String quarantineStatus;
+        public final String quarantineReason;
+        public String reviewedById;
+        public Instant reviewedAt;
+        public String reviewNotes;
+        public String resolutionAction;
+        public final Instant createdAt;
+
+        public ColdChainEvidenceDto(
+                String evidenceId,
+                String grnId,
+                String lineId,
+                String productId,
+                String batchNumber,
+                String loggerSerialNumber,
+                BigDecimal recordedTemperatureCelsius,
+                BigDecimal minTemperatureCelsius,
+                BigDecimal maxTemperatureCelsius,
+                boolean excursionDetected,
+                int excursionDurationMinutes,
+                String packagingCondition,
+                String carrierName,
+                String vehicleType,
+                String proofAttachmentReference,
+                String inspectionNotes,
+                String quarantineStatus,
+                String quarantineReason) {
+            this.evidenceId = evidenceId != null ? evidenceId : "cce-" + UUID.randomUUID().toString().substring(0, 8);
+            this.grnId = grnId != null ? grnId : "";
+            this.lineId = lineId != null ? lineId : "";
+            this.productId = productId != null ? productId : "";
+            this.batchNumber = batchNumber != null ? batchNumber : "";
+            this.loggerSerialNumber = loggerSerialNumber != null ? loggerSerialNumber : "";
+            this.recordedTemperatureCelsius = recordedTemperatureCelsius != null ? recordedTemperatureCelsius.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+            this.minTemperatureCelsius = minTemperatureCelsius != null ? minTemperatureCelsius.setScale(2, RoundingMode.HALF_UP) : null;
+            this.maxTemperatureCelsius = maxTemperatureCelsius != null ? maxTemperatureCelsius.setScale(2, RoundingMode.HALF_UP) : null;
+            this.excursionDetected = excursionDetected;
+            this.excursionDurationMinutes = Math.max(0, excursionDurationMinutes);
+            this.packagingCondition = packagingCondition != null ? packagingCondition : "INTACT_SEALED";
+            this.carrierName = carrierName != null ? carrierName : "";
+            this.vehicleType = vehicleType != null ? vehicleType : "REFRIGERATED_VAN";
+            this.proofAttachmentReference = proofAttachmentReference != null ? proofAttachmentReference : "";
+            this.inspectionNotes = inspectionNotes != null ? inspectionNotes : "";
+            this.quarantineStatus = quarantineStatus != null ? quarantineStatus : (excursionDetected ? "PENDING_REVIEW" : "NOT_QUARANTINED");
+            this.quarantineReason = quarantineReason != null ? quarantineReason : "";
+            this.reviewedById = null;
+            this.reviewedAt = null;
+            this.reviewNotes = "";
+            this.resolutionAction = "";
+            this.createdAt = Instant.now();
+        }
+    }
+
     public static final class GoodsReceiptLineDto {
         public final String lineId;
         public final String poItemId;
@@ -67,6 +137,8 @@ public class PosGoodsReceiptClient {
         public final boolean isBonusGoods;
         public final int excessQuantity;
         public final String excessReason;
+        public boolean isQuarantined;
+        public ColdChainEvidenceDto coldChainEvidence;
         public boolean isFullyAllocated;
 
         public GoodsReceiptLineDto(
@@ -130,6 +202,8 @@ public class PosGoodsReceiptClient {
                 this.lineTotal = subtotal.add(taxAmount).setScale(4, RoundingMode.HALF_UP);
             }
             this.storageLocation = storageLocation != null ? storageLocation : "MAIN_RACK";
+            this.isQuarantined = false;
+            this.coldChainEvidence = null;
             this.isFullyAllocated = false;
         }
 
@@ -179,6 +253,7 @@ public class PosGoodsReceiptClient {
         public String notes;
         public boolean isActive;
         public final List<GoodsReceiptLineDto> lines;
+        public final List<ColdChainEvidenceDto> coldChainEvidences;
         public final Instant createdAt;
 
         public GoodsReceiptDto(
@@ -205,6 +280,7 @@ public class PosGoodsReceiptClient {
                 String notes,
                 boolean isActive,
                 List<GoodsReceiptLineDto> lines,
+                List<ColdChainEvidenceDto> coldChainEvidences,
                 Instant createdAt) {
             this.grnId = grnId;
             this.grnNumber = grnNumber;
@@ -229,7 +305,36 @@ public class PosGoodsReceiptClient {
             this.notes = notes != null ? notes : "";
             this.isActive = isActive;
             this.lines = lines != null ? new ArrayList<>(lines) : new ArrayList<>();
+            this.coldChainEvidences = coldChainEvidences != null ? new ArrayList<>(coldChainEvidences) : new ArrayList<>();
             this.createdAt = createdAt != null ? createdAt : Instant.now();
+        }
+
+        public GoodsReceiptDto(
+                String grnId,
+                String grnNumber,
+                String tenantId,
+                String branchId,
+                String purchaseOrderId,
+                String purchaseOrderNumber,
+                String supplierId,
+                String supplierName,
+                String challanNumber,
+                LocalDate challanDate,
+                LocalDate receiptDate,
+                String storageCondition,
+                BigDecimal storageTemperatureCelsius,
+                boolean storageCheckPassed,
+                String proofOfOrigin,
+                String status,
+                int totalReceivedBaseUnits,
+                BigDecimal totalInvoiceAmount,
+                String apPostingStatus,
+                BigDecimal apInvoiceAmount,
+                String notes,
+                boolean isActive,
+                List<GoodsReceiptLineDto> lines,
+                Instant createdAt) {
+            this(grnId, grnNumber, tenantId, branchId, purchaseOrderId, purchaseOrderNumber, supplierId, supplierName, challanNumber, challanDate, receiptDate, storageCondition, storageTemperatureCelsius, storageCheckPassed, proofOfOrigin, status, totalReceivedBaseUnits, totalInvoiceAmount, apPostingStatus, apInvoiceAmount, notes, isActive, lines, Collections.emptyList(), createdAt);
         }
     }
 
@@ -270,6 +375,26 @@ public class PosGoodsReceiptClient {
             boolean allowExcess,
             String excessReason,
             List<GoodsReceiptLineDto> lines) {
+        return createGrn(purchaseOrderId, supplierId, supplierName, challanNumber, challanDate, receiptDate, storageCondition, storageTemperatureCelsius, storageCheckPassed, proofOfOrigin, notes, allowExcess, excessReason, false, null, lines);
+    }
+
+    public GoodsReceiptDto createGrn(
+            String purchaseOrderId,
+            String supplierId,
+            String supplierName,
+            String challanNumber,
+            LocalDate challanDate,
+            LocalDate receiptDate,
+            String storageCondition,
+            BigDecimal storageTemperatureCelsius,
+            boolean storageCheckPassed,
+            String proofOfOrigin,
+            String notes,
+            boolean allowExcess,
+            String excessReason,
+            boolean quarantineSuspicious,
+            ColdChainEvidenceDto coldChainEvidence,
+            List<GoodsReceiptLineDto> lines) {
         checkProcurementRole();
 
         if (lines == null || lines.isEmpty()) {
@@ -292,18 +417,25 @@ public class PosGoodsReceiptClient {
 
         // Cold-Chain & Storage Inspection Checks
         String cond = storageCondition != null ? storageCondition.toUpperCase() : "ROOM_TEMPERATURE";
-        if (cond.contains("COLD_CHAIN")) {
-            if (!storageCheckPassed) {
-                throw new IllegalStateException("ERR_STORAGE_CHECK_FAILED: Cold-chain physical inspection failed");
+        boolean isColdChain = cond.contains("COLD_CHAIN") || coldChainEvidence != null;
+        boolean hasTempViolation = false;
+        if (isColdChain && storageTemperatureCelsius != null) {
+            if (storageTemperatureCelsius.compareTo(new BigDecimal("2.0")) < 0 ||
+                storageTemperatureCelsius.compareTo(new BigDecimal("8.0")) > 0) {
+                hasTempViolation = true;
             }
-            if (storageTemperatureCelsius != null) {
-                if (storageTemperatureCelsius.compareTo(new BigDecimal("2.0")) < 0 ||
-                    storageTemperatureCelsius.compareTo(new BigDecimal("8.0")) > 0) {
+        }
+        boolean isSuspicious = hasTempViolation || !storageCheckPassed || quarantineSuspicious;
+        if (isSuspicious) {
+            if (quarantineSuspicious) {
+                // Quarantined path accepted
+            } else {
+                if (hasTempViolation) {
                     throw new IllegalStateException("ERR_STORAGE_CHECK_FAILED: Cold-chain temperature violation (" + storageTemperatureCelsius + " C). Accepted: 2-8 C");
+                } else {
+                    throw new IllegalStateException("ERR_STORAGE_CHECK_FAILED: " + (isColdChain ? "Cold-chain physical inspection failed" : "Storage inspection check failed"));
                 }
             }
-        } else if (!storageCheckPassed) {
-            throw new IllegalStateException("ERR_STORAGE_CHECK_FAILED: Storage inspection check failed");
         }
 
         LocalDate today = LocalDate.now();
@@ -358,12 +490,40 @@ public class PosGoodsReceiptClient {
                 }
             }
 
+            if (isSuspicious && quarantineSuspicious) {
+                line.isQuarantined = true;
+            }
+
             totalUnits += line.receivedQuantityBaseUnits;
             totalAmount = totalAmount.add(line.lineTotal);
         }
 
         String grnId = "grn-" + UUID.randomUUID().toString().substring(0, 12);
         String grnNumber = "GRN-" + LocalDate.now().toString().replace("-", "").substring(0, 6) + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+
+        List<ColdChainEvidenceDto> evidences = new ArrayList<>();
+        if (isColdChain) {
+            for (GoodsReceiptLineDto line : lines) {
+                ColdChainEvidenceDto ev = (coldChainEvidence != null) ? coldChainEvidence : new ColdChainEvidenceDto(
+                        null,
+                        grnId,
+                        line.lineId,
+                        line.productId,
+                        line.batchNumber,
+                        "",
+                        storageTemperatureCelsius != null ? storageTemperatureCelsius : new BigDecimal("4.00"),
+                        null, null,
+                        line.isQuarantined,
+                        0,
+                        storageCheckPassed ? "INTACT_SEALED" : "ICE_PACKS_MELTED",
+                        "", "REFRIGERATED_VAN", proofOfOrigin, notes,
+                        line.isQuarantined ? "PENDING_REVIEW" : "NOT_QUARANTINED",
+                        line.isQuarantined ? "Cold-chain anomaly detected during inspection" : ""
+                );
+                line.coldChainEvidence = ev;
+                evidences.add(ev);
+            }
+        }
 
         GoodsReceiptDto grn = new GoodsReceiptDto(
                 grnId,
@@ -389,6 +549,7 @@ public class PosGoodsReceiptClient {
                 notes,
                 true,
                 lines,
+                evidences,
                 Instant.now()
         );
 
@@ -506,6 +667,81 @@ public class PosGoodsReceiptClient {
             throw new IllegalStateException("ERR_PO_CLIENT_NOT_CONFIGURED: Purchase order client is required");
         }
         return poClient.cancelBackorder(poId, itemId, cancelQuantity, reason);
+    }
+
+    public ColdChainEvidenceDto resolveQuarantine(
+            String grnId,
+            String evidenceId,
+            String resolutionAction,
+            String justification,
+            String notes) {
+        checkProcurementRole();
+        if (!"BRANCH_MANAGER".equals(userRole) && !"PHARMACY_OWNER".equals(userRole) && !"SUPERADMIN".equals(userRole) && !"STAFF_PHARMACIST".equals(userRole)) {
+            throw new SecurityException("ERR_STAFF_ROLE_DENIED: Only Managers and Registered Pharmacists can resolve cold-chain quarantine");
+        }
+        GoodsReceiptDto grn = grnStore.get(grnId);
+        if (grn == null) {
+            throw new NoSuchElementException("ERR_GRN_NOT_FOUND: Goods receipt " + grnId + " not found");
+        }
+        if (!grn.tenantId.equals(tenantId)) {
+            throw new SecurityException("ERR_CROSS_TENANT_ACCESS: Cross-tenant quarantine resolution forbidden");
+        }
+        ColdChainEvidenceDto evidence = null;
+        for (ColdChainEvidenceDto e : grn.coldChainEvidences) {
+            if (e.evidenceId.equals(evidenceId)) {
+                evidence = e;
+                break;
+            }
+        }
+        if (evidence == null) {
+            throw new NoSuchElementException("ERR_EVIDENCE_NOT_FOUND: Evidence " + evidenceId + " not found");
+        }
+        if (!"PENDING_REVIEW".equals(evidence.quarantineStatus)) {
+            throw new IllegalStateException("ERR_ALREADY_RESOLVED: Evidence is already resolved: " + evidence.quarantineStatus);
+        }
+        if (justification == null || justification.trim().isEmpty()) {
+            throw new IllegalArgumentException("ERR_MISSING_JUSTIFICATION: Justification is required");
+        }
+        String act = resolutionAction != null ? resolutionAction.toUpperCase().trim() : "";
+        if (!"APPROVE_RELEASE".equals(act) && !"REJECT_RETURN".equals(act) && !"DISPOSE_DESTROY".equals(act)) {
+            throw new IllegalArgumentException("ERR_INVALID_RESOLUTION_ACTION: Action must be APPROVE_RELEASE, REJECT_RETURN, or DISPOSE_DESTROY");
+        }
+
+        evidence.resolutionAction = act;
+        evidence.reviewNotes = justification.trim();
+        evidence.reviewedById = userId;
+        evidence.reviewedAt = Instant.now();
+
+        // Find matching line in GRN
+        GoodsReceiptLineDto targetLine = null;
+        for (GoodsReceiptLineDto line : grn.lines) {
+            if (line.batchNumber.equals(evidence.batchNumber)) {
+                targetLine = line;
+                break;
+            }
+        }
+
+        if ("APPROVE_RELEASE".equals(act)) {
+            evidence.quarantineStatus = "RELEASED";
+            if (targetLine != null) {
+                targetLine.isQuarantined = false;
+            }
+        } else if ("REJECT_RETURN".equals(act)) {
+            evidence.quarantineStatus = "RETURNED_TO_SUPPLIER";
+            if (targetLine != null) {
+                targetLine.isQuarantined = false;
+                if ("POSTED".equals(grn.apPostingStatus)) {
+                    grn.apInvoiceAmount = grn.apInvoiceAmount.subtract(targetLine.lineTotal).max(BigDecimal.ZERO);
+                }
+            }
+        } else { // DISPOSE_DESTROY
+            evidence.quarantineStatus = "DISPOSED";
+            if (targetLine != null) {
+                targetLine.isQuarantined = false;
+            }
+        }
+
+        return evidence;
     }
 }
 
