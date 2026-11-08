@@ -51,14 +51,69 @@ public class PosPurchaseOrderClient {
         public final String productId;
         public final String productName;
         public final String packageType;
+        public final String packUnit;
         public final int packageSize;
+        public final int orderedPackages;
         public final int orderedQuantity;
         public int receivedQuantity;
         public final BigDecimal unitCostPrice;
+        public final BigDecimal packageCostPrice;
+        public final BigDecimal mrpUnit;
         public final BigDecimal discountPercentage;
         public final BigDecimal netUnitCost;
+        public final BigDecimal taxPercentage;
+        public final BigDecimal taxAmount;
+        public final BigDecimal lineSubtotal;
         public final BigDecimal lineTotal;
+        public final LocalDate expectedDeliveryDate;
+        public final int freeGoodsBonusQuantity;
         public final String notes;
+
+        public PurchaseOrderItemDto(
+                String itemId,
+                String productId,
+                String productName,
+                String packUnit,
+                int packageSize,
+                int orderedPackages,
+                int orderedQuantity,
+                int receivedQuantity,
+                BigDecimal unitCostPrice,
+                BigDecimal mrpUnit,
+                BigDecimal discountPercentage,
+                BigDecimal taxPercentage,
+                LocalDate expectedDeliveryDate,
+                int freeGoodsBonusQuantity,
+                String notes) {
+            this.itemId = itemId != null ? itemId : "poi-" + UUID.randomUUID().toString().substring(0, 8);
+            this.productId = productId != null ? productId : "";
+            this.productName = productName != null ? productName : "";
+            this.packUnit = (packUnit != null && !packUnit.trim().isEmpty()) ? packUnit.trim() : "BOX";
+            this.packageType = this.packUnit;
+            this.packageSize = Math.max(1, packageSize);
+            this.orderedPackages = Math.max(0, orderedPackages);
+
+            int calcQty = orderedQuantity;
+            if (calcQty <= 0 && this.orderedPackages > 0) {
+                calcQty = this.orderedPackages * this.packageSize;
+            }
+            this.orderedQuantity = Math.max(1, calcQty);
+            this.receivedQuantity = Math.max(0, receivedQuantity);
+            this.unitCostPrice = unitCostPrice != null ? unitCostPrice.setScale(4, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+            this.packageCostPrice = this.unitCostPrice.multiply(BigDecimal.valueOf(this.packageSize)).setScale(4, RoundingMode.HALF_UP);
+            this.mrpUnit = mrpUnit != null ? mrpUnit.setScale(4, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+            this.discountPercentage = discountPercentage != null ? discountPercentage.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+            this.taxPercentage = taxPercentage != null ? taxPercentage.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+
+            BigDecimal discountFactor = BigDecimal.ONE.subtract(this.discountPercentage.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP));
+            this.netUnitCost = this.unitCostPrice.multiply(discountFactor).setScale(4, RoundingMode.HALF_UP);
+            this.lineSubtotal = this.netUnitCost.multiply(BigDecimal.valueOf(this.orderedQuantity)).setScale(4, RoundingMode.HALF_UP);
+            this.taxAmount = this.lineSubtotal.multiply(this.taxPercentage.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP)).setScale(4, RoundingMode.HALF_UP);
+            this.lineTotal = this.lineSubtotal.add(this.taxAmount).setScale(4, RoundingMode.HALF_UP);
+            this.expectedDeliveryDate = expectedDeliveryDate;
+            this.freeGoodsBonusQuantity = Math.max(0, freeGoodsBonusQuantity);
+            this.notes = notes != null ? notes : "";
+        }
 
         public PurchaseOrderItemDto(
                 String itemId,
@@ -71,20 +126,7 @@ public class PosPurchaseOrderClient {
                 BigDecimal unitCostPrice,
                 BigDecimal discountPercentage,
                 String notes) {
-            this.itemId = itemId != null ? itemId : "poi-" + UUID.randomUUID().toString().substring(0, 8);
-            this.productId = productId != null ? productId : "";
-            this.productName = productName != null ? productName : "";
-            this.packageType = packageType != null ? packageType : "BOX";
-            this.packageSize = Math.max(1, packageSize);
-            this.orderedQuantity = Math.max(1, orderedQuantity);
-            this.receivedQuantity = Math.max(0, receivedQuantity);
-            this.unitCostPrice = unitCostPrice != null ? unitCostPrice.setScale(4, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
-            this.discountPercentage = discountPercentage != null ? discountPercentage.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
-
-            BigDecimal discountFactor = BigDecimal.ONE.subtract(this.discountPercentage.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP));
-            this.netUnitCost = this.unitCostPrice.multiply(discountFactor).setScale(4, RoundingMode.HALF_UP);
-            this.lineTotal = this.netUnitCost.multiply(BigDecimal.valueOf(this.orderedQuantity)).setScale(4, RoundingMode.HALF_UP);
-            this.notes = notes != null ? notes : "";
+            this(itemId, productId, productName, packageType, packageSize, 0, orderedQuantity, receivedQuantity, unitCostPrice, BigDecimal.ZERO, discountPercentage, BigDecimal.ZERO, null, 0, notes);
         }
     }
 
@@ -575,6 +617,136 @@ public class PosPurchaseOrderClient {
         }
         list.sort((a, b) -> b.createdAt.compareTo(a.createdAt));
         return list;
+    }
+
+    private PurchaseOrderDto recalculatePo(PurchaseOrderDto po, List<PurchaseOrderItemDto> items) {
+        BigDecimal subtotal = BigDecimal.ZERO;
+        BigDecimal taxTotal = BigDecimal.ZERO;
+        for (PurchaseOrderItemDto item : items) {
+            subtotal = subtotal.add(item.lineSubtotal);
+            taxTotal = taxTotal.add(item.taxAmount);
+        }
+        BigDecimal discount = po.discountAmount != null ? po.discountAmount : BigDecimal.ZERO;
+        BigDecimal total = subtotal.subtract(discount).add(taxTotal).setScale(4, RoundingMode.HALF_UP);
+        if (total.compareTo(BigDecimal.ZERO) < 0) {
+            total = BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+        }
+        return new PurchaseOrderDto(
+                po.poId, po.poNumber, po.tenantId, po.branchId, po.branchName,
+                po.supplierId, po.supplierName, po.requisitionId, po.status,
+                po.paymentTermsDays, po.currency, subtotal, discount, taxTotal, total,
+                po.expectedDeliveryDate, po.orderedAt, po.approvedById, po.approvedAt,
+                po.approvalNotes, po.closedAt, po.closingNotes, po.cancelledById,
+                po.cancelledAt, po.cancellationReason, po.notes, po.isActive, items, po.createdAt
+        );
+    }
+
+    private void validateLineItem(PurchaseOrderItemDto item) {
+        if (item.productId == null || item.productId.trim().isEmpty()) {
+            throw new IllegalArgumentException("ERR_MISSING_PRODUCT_ID: Product ID cannot be empty");
+        }
+        if (item.orderedQuantity < 1) {
+            throw new IllegalArgumentException("ERR_INVALID_QUANTITY: Ordered quantity must be at least 1");
+        }
+        if (item.unitCostPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("ERR_INVALID_COST_PRICE: Unit cost price must be positive");
+        }
+        if (item.discountPercentage.compareTo(BigDecimal.ZERO) < 0 || item.discountPercentage.compareTo(BigDecimal.valueOf(100)) > 0) {
+            throw new IllegalArgumentException("ERR_INVALID_DISCOUNT: Discount percentage must be between 0 and 100");
+        }
+        if (item.taxPercentage.compareTo(BigDecimal.ZERO) < 0 || item.taxPercentage.compareTo(BigDecimal.valueOf(100)) > 0) {
+            throw new IllegalArgumentException("ERR_INVALID_TAX: Tax percentage must be between 0 and 100");
+        }
+        if (item.mrpUnit.compareTo(BigDecimal.ZERO) > 0 && item.unitCostPrice.compareTo(item.mrpUnit) > 0) {
+            throw new IllegalArgumentException("ERR_COST_EXCEEDS_MRP: Unit cost price (" + item.unitCostPrice + ") cannot exceed maximum retail price (" + item.mrpUnit + ")");
+        }
+    }
+
+    public List<PurchaseOrderItemDto> listPoItems(String poId) {
+        PurchaseOrderDto po = getPurchaseOrder(poId);
+        return Collections.unmodifiableList(po.items);
+    }
+
+    public PurchaseOrderDto addPoItem(String poId, PurchaseOrderItemDto newItem) {
+        checkProcurementRole();
+        PurchaseOrderDto existing = getPurchaseOrder(poId);
+        if (!"DRAFT".equals(existing.status)) {
+            throw new IllegalStateException("ERR_PO_LOCKED: Line items can only be added to DRAFT purchase orders");
+        }
+        if (newItem == null) {
+            throw new IllegalArgumentException("ERR_NULL_ITEM: Item cannot be null");
+        }
+        validateLineItem(newItem);
+
+        List<PurchaseOrderItemDto> updatedItems = new ArrayList<>(existing.items);
+        updatedItems.add(newItem);
+        PurchaseOrderDto updatedPo = recalculatePo(existing, updatedItems);
+        poStore.put(poId, updatedPo);
+        return updatedPo;
+    }
+
+    public PurchaseOrderDto updatePoItem(String poId, String itemId, PurchaseOrderItemDto updatedItem) {
+        checkProcurementRole();
+        PurchaseOrderDto existing = getPurchaseOrder(poId);
+        if (!"DRAFT".equals(existing.status)) {
+            throw new IllegalStateException("ERR_PO_LOCKED: Line items can only be modified in DRAFT purchase orders");
+        }
+        if (itemId == null || itemId.trim().isEmpty()) {
+            throw new IllegalArgumentException("ERR_MISSING_ITEM_ID: Item ID cannot be empty");
+        }
+        if (updatedItem == null) {
+            throw new IllegalArgumentException("ERR_NULL_ITEM: Item cannot be null");
+        }
+        validateLineItem(updatedItem);
+
+        boolean found = false;
+        List<PurchaseOrderItemDto> updatedItems = new ArrayList<>();
+        for (PurchaseOrderItemDto item : existing.items) {
+            if (item.itemId.equals(itemId)) {
+                updatedItems.add(updatedItem);
+                found = true;
+            } else {
+                updatedItems.add(item);
+            }
+        }
+        if (!found) {
+            throw new NoSuchElementException("ERR_ITEM_NOT_FOUND: Item " + itemId + " not found on purchase order");
+        }
+
+        PurchaseOrderDto updatedPo = recalculatePo(existing, updatedItems);
+        poStore.put(poId, updatedPo);
+        return updatedPo;
+    }
+
+    public PurchaseOrderDto deletePoItem(String poId, String itemId) {
+        checkProcurementRole();
+        PurchaseOrderDto existing = getPurchaseOrder(poId);
+        if (!"DRAFT".equals(existing.status)) {
+            throw new IllegalStateException("ERR_PO_LOCKED: Line items can only be deleted from DRAFT purchase orders");
+        }
+        if (itemId == null || itemId.trim().isEmpty()) {
+            throw new IllegalArgumentException("ERR_MISSING_ITEM_ID: Item ID cannot be empty");
+        }
+
+        boolean found = false;
+        List<PurchaseOrderItemDto> updatedItems = new ArrayList<>();
+        for (PurchaseOrderItemDto item : existing.items) {
+            if (item.itemId.equals(itemId)) {
+                found = true;
+            } else {
+                updatedItems.add(item);
+            }
+        }
+        if (!found) {
+            throw new NoSuchElementException("ERR_ITEM_NOT_FOUND: Item " + itemId + " not found on purchase order");
+        }
+        if (updatedItems.isEmpty()) {
+            throw new IllegalStateException("ERR_CANNOT_DELETE_LAST_ITEM: Purchase order must retain at least one item");
+        }
+
+        PurchaseOrderDto updatedPo = recalculatePo(existing, updatedItems);
+        poStore.put(poId, updatedPo);
+        return updatedPo;
     }
 }
 
