@@ -25,5 +25,6 @@ module com.pharmacy.pos {
     exports com.pharmacy.pos.models;
     exports com.pharmacy.pos.services;
     exports com.pharmacy.pos.controllers;
+    exports com.pharmacy.pos.sales;
 }
 

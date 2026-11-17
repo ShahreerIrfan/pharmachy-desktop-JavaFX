@@ -5,25 +5,221 @@
 <?import javafx.geometry.Insets?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:id="rootPane"
             fx:controller="com.pharmacy.pos.controllers.PosController"
             prefHeight="800.0" prefWidth="1280.0">
 
     <top>
-        <HBox styleClass="header-bar" spacing="16.0" alignment="CENTER_LEFT">
-            <Label text="Bangladesh Pharmacy ERP &amp; POS" styleClass="brand-title"/>
+        <HBox styleClass="header-bar" spacing="12.0" alignment="CENTER_LEFT">
+            <Label fx:id="headerBrandLabel" text="Bangladesh Pharmacy ERP &amp; POS" styleClass="brand-title"/>
+            <Label fx:id="activeSaleBadge" text="Quick Cart | Empty" styleClass="shift-meta-pill"/>
             <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="btnRefreshSnapshot" text="Sync SKU Cache" styleClass="btn-secondary" onAction="#handleSyncOfflineCache"/>
+            <Button fx:id="btnToggleOffline" text="Simulate Offline" styleClass="btn-secondary" onAction="#handleToggleOffline"/>
+            <Button fx:id="btnLangToggle" text="বাংলা / EN" styleClass="btn-secondary" onAction="#handleToggleLanguage"/>
             <Label fx:id="networkStatusLabel" text="Online Authority" styleClass="status-badge-online"/>
             <Label fx:id="shiftStatusBadge" text="Shift: Active" styleClass="status-badge-online"/>
-            <Button text="Lock Counter" styleClass="btn-secondary" onAction="#handleLockCounter"/>
+            <Button fx:id="btnLockCounter" text="Lock Counter" styleClass="btn-secondary" onAction="#handleLockCounter"/>
         </HBox>
     </top>
 
     <center>
-        <VBox spacing="16.0" styleClass="pos-container">
-            <HBox spacing="12.0" alignment="CENTER_LEFT">
-                <TextField fx:id="barcodeInputField" promptText="Scan Barcode or Search Generic / Brand (F2)..."
+        <VBox spacing="12.0" styleClass="pos-container">
+            <HBox spacing="8.0" alignment="CENTER_LEFT">
+                <TextField fx:id="barcodeInputField"
+                           promptText="Scan Barcode, GTIN, SKU or Search Generic / Brand EN-BN (F2)..."
+                           onAction="#handleScanSubmit"
                            styleClass="search-box" HBox.hgrow="ALWAYS"/>
-                <Button text="Add Item" styleClass="btn-primary"/>
+                <Button fx:id="btnAddItem" text="Add Item (Enter)" styleClass="btn-primary" onAction="#handleAddSelectedOrScan"/>
+                <Button fx:id="btnClearSearch" text="Clear (Esc)" styleClass="btn-secondary" onAction="#handleClearSearch"/>
+            </HBox>
+
+            <HBox fx:id="stateStatusBanner" styleClass="state-banner, state-banner-empty" spacing="8.0" alignment="CENTER_LEFT">
+                <Label fx:id="stateStatusLabel" text="Ready for barcode scan or brand/generic search [F2]." wrapText="true"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="searchLatencyLabel" text="" style="-fx-font-size: 11px; -fx-text-fill: #64748B;"/>
+            </HBox>
+
+            <ListView fx:id="searchResultsList" prefHeight="185.0" maxHeight="220.0"
+                      visible="false" managed="false" styleClass="search-results-list"/>
+
+            <HBox fx:id="staleConfirmationBanner" styleClass="state-banner, state-banner-offline" spacing="8.0" alignment="CENTER_LEFT"
+                  visible="false" managed="false">
+                <Label fx:id="stalePromptLabel" text="" wrapText="true" HBox.hgrow="ALWAYS" style="-fx-font-weight: 600;"/>
+                <Button fx:id="btnAcknowledgeResume" text="Confirm &amp; Resume" styleClass="btn-primary" onAction="#handleAcknowledgeStaleResume"/>
+                <Button fx:id="btnDismissStalePrompt" text="Dismiss" styleClass="btn-secondary" onAction="#handleDismissStalePrompt"/>
+            </HBox>
+
+            <VBox fx:id="heldCartsDrawer" spacing="6.0" styleClass="totals-card" visible="false" managed="false">
+                <HBox spacing="8.0" alignment="CENTER_LEFT">
+                    <Label fx:id="heldDrawerTitleLabel" text="Held Carts &amp; Reservations" style="-fx-font-weight: bold; -fx-font-size: 13px;"/>
+                    <Label fx:id="heldDrawerSummaryLabel" text="0 held | 0 stale" styleClass="shift-meta-pill"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnRefreshHeldCarts" text="Refresh" styleClass="btn-secondary" onAction="#handleRefreshHeldCarts"/>
+                    <Button fx:id="btnExpireStaleHolds" text="Expire Stale" styleClass="btn-secondary" onAction="#handleExpireStaleHolds"/>
+                    <Button fx:id="btnResumeSelectedHeld" text="Resume" styleClass="btn-primary" onAction="#handleResumeSelectedHeldCart"/>
+                    <Button fx:id="btnReleaseSelectedHold" text="Release Res." styleClass="btn-secondary" onAction="#handleReleaseSelectedHold"/>
+                    <Button fx:id="btnCancelSelectedHold" text="Cancel Hold" styleClass="btn-danger-outline" onAction="#handleCancelSelectedHold"/>
+                    <Button fx:id="btnCloseHeldDrawer" text="Close" styleClass="btn-secondary" onAction="#handleToggleHeldDrawer"/>
+                </HBox>
+                <ListView fx:id="heldCartsList" prefHeight="150.0" maxHeight="180.0" styleClass="search-results-list">
+                    <placeholder>
+                        <Label fx:id="heldCartsEmptyLabel" text="No held baskets in this branch."/>
+                    </placeholder>
+                </ListView>
+            </VBox>
+
+            <VBox fx:id="splitPaymentDrawer" managed="false" visible="false" spacing="8"
+                  style="-fx-background-color: #F8FAFC; -fx-border-color: #CBD5E1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 10;">
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label fx:id="splitPayDrawerTitleLabel" text="Split Payments &amp; Cashier Close Reconciliation [F6]"
+                           style="-fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+                    <Label fx:id="splitPayStatusBadge" text="CASH ONLY"
+                           style="-fx-background-color: #E2E8F0; -fx-text-fill: #334155; -fx-padding: 2 8; -fx-background-radius: 4; -fx-font-weight: bold;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnRefreshCloseRecon" text="Shift Totals" styleClass="btn-secondary" onAction="#handleRefreshCloseReconciliation"/>
+                    <Button fx:id="btnCloseSplitPayDrawer" text="Close" styleClass="btn-secondary" onAction="#handleToggleSplitPayDrawer"/>
+                </HBox>
+                <HBox spacing="6" alignment="CENTER_LEFT">
+                    <ComboBox fx:id="splitTenderCombo" prefWidth="125.0"/>
+                    <TextField fx:id="splitAmountField" promptText="Amount (BDT)" prefWidth="105.0"/>
+                    <TextField fx:id="splitRefField" promptText="TrxID / Card Auth Ref" prefWidth="175.0"/>
+                    <TextField fx:id="splitPayerField" promptText="Payer / Last 4" prefWidth="120.0"/>
+                    <Button fx:id="btnAddSplitLeg" text="+ Add Split" styleClass="btn-secondary" onAction="#handleAddSplitPaymentLeg"/>
+                    <Button fx:id="btnClearSplitLegs" text="Clear" styleClass="btn-danger-outline" onAction="#handleClearSplitPaymentLegs"/>
+                    <Button fx:id="btnSubmitSplitPayments" text="Post Splits" styleClass="btn-primary" onAction="#handleSubmitSplitPayments"/>
+                </HBox>
+                <Label fx:id="splitPaySummaryLabel" text="No split legs staged; Checkout settles exact Cash." wrapText="true"
+                       style="-fx-font-size: 11px; -fx-text-fill: #1E293B;"/>
+                <HBox spacing="6" alignment="CENTER_LEFT">
+                    <ComboBox fx:id="splitCustomerCombo" promptText="Walk-in Customer (Select for Credit)" prefWidth="240.0" onAction="#handleSelectCustomerForSale"/>
+                    <Button fx:id="btnRefreshCustomers" text="Customers" styleClass="btn-secondary" onAction="#handleRefreshCustomers"/>
+                    <Label fx:id="splitCustomerCreditBadge" text="WALK-IN (DUE DISABLED)"
+                           style="-fx-background-color: #E2E8F0; -fx-text-fill: #334155; -fx-padding: 2 8; -fx-background-radius: 4; -fx-font-weight: bold;"/>
+                </HBox>
+                <HBox spacing="6" alignment="CENTER_LEFT">
+                    <ComboBox fx:id="dueRecordCombo" promptText="Open Customer Due Record" prefWidth="210.0"/>
+                    <ComboBox fx:id="dueCollectTenderCombo" prefWidth="115.0"/>
+                    <TextField fx:id="dueCollectAmountField" promptText="Collect (BDT)" prefWidth="105.0"/>
+                    <TextField fx:id="dueCollectRefField" promptText="TrxID (if MFS/Card)" prefWidth="145.0"/>
+                    <Button fx:id="btnRefreshCustomerDues" text="Dues" styleClass="btn-secondary" onAction="#handleRefreshCustomerDues"/>
+                    <Button fx:id="btnCollectCustomerDue" text="Collect Due" styleClass="btn-primary" onAction="#handleCollectCustomerDue"/>
+                </HBox>
+                <HBox spacing="6" alignment="CENTER_LEFT">
+                    <TextField fx:id="closeCountedCashField" promptText="Counted Cash (BDT)" prefWidth="140.0"/>
+                    <TextField fx:id="closeVarianceNotesField" promptText="Variance Notes (if Cash != Expected)" HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnSubmitCloseRecon" text="Close Shift Drawer" styleClass="btn-secondary" onAction="#handleSubmitCloseReconciliation"/>
+                </HBox>
+                <Label fx:id="closeReconSummaryLabel" text="" wrapText="true"
+                       style="-fx-font-size: 11px; -fx-text-fill: #334155;"/>
+            </VBox>
+
+                        <VBox fx:id="fefoPlanDrawer" managed="false" visible="false" spacing="8"
+                  style="-fx-background-color: #F8FAFC; -fx-border-color: #CBD5E1; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 10;">
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label fx:id="fefoPlanDrawerTitleLabel" text="FEFO Lot Allocation &amp; Safety Check [F7]"
+                           style="-fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+                    <Label fx:id="fefoPlanStatusBadge" text="PENDING"
+                           style="-fx-background-color: #E2E8F0; -fx-text-fill: #334155; -fx-padding: 2 8; -fx-background-radius: 4; -fx-font-weight: bold;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnRefreshFefoPlan" text="Refresh Plan" styleClass="btn-secondary" onAction="#handleRefreshFefoPlan"/>
+                    <Button fx:id="btnCloseFefoDrawer" text="Close" styleClass="btn-secondary" onAction="#handleToggleFefoPlanDrawer"/>
+                </HBox>
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <TextField fx:id="fefoOverrideBatchField" promptText="Optional Override Batch ID (Pharmacist/Manager)" prefWidth="240"/>
+                    <TextField fx:id="fefoOverrideReasonField" promptText="Override Reason (>= 3 chars if bypassing FEFO)" HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnReserveFefoLots" text="Reserve FEFO Lots" styleClass="btn-primary" onAction="#handleReserveFefoLots"/>
+                </HBox>
+                <Label fx:id="fefoPlanSummaryLabel" text="No active FEFO plan loaded." wrapText="true"
+                       style="-fx-font-size: 11px; -fx-text-fill: #1E293B;"/>
+            </VBox>
+
+<VBox fx:id="rxGateDrawer" managed="false" visible="false" spacing="8"
+                  style="-fx-background-color: #F4FBF8; -fx-border-color: #B7E4D8; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 10;">
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label fx:id="rxGateDrawerTitleLabel" text="Prescription Safety Gate &amp; Pharmacist Clearance [F8]"
+                           style="-fx-font-weight: bold; -fx-text-fill: #0F5132;"/>
+                    <Label fx:id="rxGateStatusBadge" text="NOT_REQUIRED"
+                           style="-fx-background-color: #D1E7DD; -fx-text-fill: #0F5132; -fx-padding: 2 8; -fx-background-radius: 4; -fx-font-weight: bold;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnRefreshAntibioticRegister" text="Abx Register" styleClass="btn-secondary" onAction="#handleRefreshAntibioticRegister"/>
+                    <Button fx:id="btnCloseRxDrawer" text="Close" styleClass="btn-secondary" onAction="#handleToggleRxGateDrawer"/>
+                </HBox>
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <TextField fx:id="rxDoctorNameField" promptText="Doctor Full Name" HBox.hgrow="ALWAYS"/>
+                    <TextField fx:id="rxDoctorBmdcField" promptText="BMDC Reg (e.g. A-44120)" prefWidth="150"/>
+                    <TextField fx:id="rxPatientTokenField" promptText="Patient Ref" prefWidth="120"/>
+                    <TextField fx:id="rxReferenceField" promptText="Rx Reference / No." prefWidth="140"/>
+                    <Button fx:id="btnAttachPrescription" text="Attach Rx" styleClass="btn-secondary" onAction="#handleAttachPrescription"/>
+                </HBox>
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <TextField fx:id="rxPharmacistPcbField" promptText="PCB Reg No. (e.g. PCB-12345)" prefWidth="170"/>
+                    <TextField fx:id="rxDecisionNotesField" promptText="Pharmacist Verification / Rejection Reason" HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnVerifyRxOrder" text="Approve Rx" styleClass="btn-primary" onAction="#handleVerifyRxOrder"/>
+                    <Button fx:id="btnRejectRxOrder" text="Reject Rx" styleClass="btn-secondary" style="-fx-border-color: #B42318; -fx-text-fill: #B42318;" onAction="#handleRejectRxOrder"/>
+                </HBox>
+                <Label fx:id="rxComplianceSummaryLabel" text="OTC basket: standard checkout ready." wrapText="true"
+                       style="-fx-font-size: 11px; -fx-text-fill: #1E293B;"/>
+            </VBox>
+
+            <VBox fx:id="deliveryDrawer" spacing="6.0" styleClass="totals-card" visible="false" managed="false">
+                <HBox spacing="8.0" alignment="CENTER_LEFT">
+                    <Label fx:id="deliveryDrawerTitleLabel" text="Preorders &amp; Delivery Fulfillment" style="-fx-font-weight: bold; -fx-font-size: 13px;"/>
+                    <Label fx:id="deliveryDrawerSummaryLabel" text="0 queued" styleClass="shift-meta-pill"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnRefreshDeliveries" text="Refresh" styleClass="btn-secondary" onAction="#handleRefreshDeliveries"/>
+                    <Button fx:id="btnCloseDeliveryDrawer" text="Close" styleClass="btn-secondary" onAction="#handleToggleDeliveryDrawer"/>
+                </HBox>
+                <HBox spacing="6.0" alignment="CENTER_LEFT">
+                    <ComboBox fx:id="deliveryModeCombo" prefWidth="140.0"/>
+                    <TextField fx:id="deliveryRecipientField" promptText="Recipient Name" prefWidth="130.0"/>
+                    <TextField fx:id="deliveryPhoneField" promptText="Phone (017...)" prefWidth="110.0"/>
+                    <TextField fx:id="deliveryAddressField" promptText="Street Address (Home Delivery)" HBox.hgrow="ALWAYS"/>
+                    <TextField fx:id="deliveryAreaField" promptText="Area" prefWidth="90.0"/>
+                    <TextField fx:id="deliveryFeeField" promptText="Fee BDT" prefWidth="70.0"/>
+                    <CheckBox fx:id="reserveDeliveryStockCheck" text="Reserve Stock" selected="true"/>
+                    <Button fx:id="btnSubmitDeliveryOrder" text="Create Order" styleClass="btn-primary" onAction="#handleCreateDeliveryFromCart"/>
+                </HBox>
+                <ListView fx:id="deliveriesList" prefHeight="125.0" maxHeight="150.0" styleClass="search-results-list">
+                    <placeholder>
+                        <Label fx:id="deliveriesEmptyLabel" text="No preorders or deliveries queued in this branch."/>
+                    </placeholder>
+                </ListView>
+                <Label fx:id="deliveryDetailLabel" text="" wrapText="true" style="-fx-font-size: 11px; -fx-text-fill: #334155;"/>
+                <HBox spacing="6.0" alignment="CENTER_LEFT">
+                    <TextField fx:id="deliveryRiderField" promptText="Rider / Courier Partner" prefWidth="150.0"/>
+                    <TextField fx:id="deliveryPodField" promptText="POD OTP / Receipt Ref" prefWidth="140.0"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnPackDelivery" text="Pack" styleClass="btn-secondary" onAction="#handlePackSelectedDelivery"/>
+                    <Button fx:id="btnDispatchDelivery" text="Dispatch" styleClass="btn-secondary" onAction="#handleDispatchSelectedDelivery"/>
+                    <Button fx:id="btnDeliverOrder" text="Deliver" styleClass="btn-primary" onAction="#handleDeliverSelectedOrder"/>
+                    <Button fx:id="btnRevealDeliveryAddress" text="Reveal Address" styleClass="btn-secondary" onAction="#handleRevealSelectedDeliveryAddress"/>
+                    <Button fx:id="btnCancelDelivery" text="Cancel" styleClass="btn-danger-outline" onAction="#handleCancelSelectedDelivery"/>
+                </HBox>
+            </VBox>
+
+            <HBox spacing="8.0" alignment="CENTER_LEFT">
+                <Button fx:id="btnQtyMinus" text="- Qty" styleClass="btn-secondary" onAction="#handleDecrementSelectedLine"/>
+                <Button fx:id="btnQtyPlus" text="+ Qty" styleClass="btn-secondary" onAction="#handleIncrementSelectedLine"/>
+                <ComboBox fx:id="unitSelectorCombo" prefWidth="210.0" promptText="Select Unit" onAction="#handleSelectUnitFromCombo"/>
+                <Button fx:id="btnCycleUnit" text="Unit [U]" styleClass="btn-secondary" onAction="#handleCycleSelectedUnit"/>
+                <Label fx:id="selectedLineBaseUnitsLabel" text="Base: 0u" styleClass="shift-meta-pill"/>
+                <Button fx:id="btnRemoveLine" text="Remove [Del]" styleClass="btn-danger-outline" onAction="#handleRemoveSelectedLine"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="cartSummaryBadge" text="0 lines | 0 items" style="-fx-font-size: 12px; -fx-text-fill: #475569; -fx-font-weight: 600;"/>
+            </HBox>
+
+            <HBox spacing="8.0" alignment="CENTER_LEFT">
+                <TextField fx:id="holdReferenceField" promptText="Hold Ref (Optional)" prefWidth="150.0"/>
+                <TextField fx:id="holdTtlField" promptText="TTL min (30)" prefWidth="90.0"/>
+                <CheckBox fx:id="reserveHoldStockCheck" text="Reserve FEFO Stock"/>
+                <Button fx:id="btnHoldCart" text="Hold [F9]" styleClass="btn-secondary" onAction="#handleHoldCart"/>
+                <Button fx:id="btnHeldCarts" text="Held (0) [F10]" styleClass="btn-secondary" onAction="#handleToggleHeldDrawer"/>
+                <Button fx:id="btnDeliveries" text="Deliveries (0) [F11]" styleClass="btn-secondary" onAction="#handleToggleDeliveryDrawer"/>
+                <Button fx:id="btnSplitPayments" text="Split Pay [F6]" styleClass="btn-secondary" onAction="#handleToggleSplitPayDrawer"/>
+                <Button fx:id="btnFefoLots" text="FEFO Lots [F7]" styleClass="btn-secondary" onAction="#handleToggleFefoPlanDrawer"/>
+                <Button fx:id="btnRxGate" text="Rx Gate [F8]" styleClass="btn-secondary" onAction="#handleToggleRxGateDrawer"/>
+                <Region HBox.hgrow="ALWAYS"/>
             </HBox>
 
             <TableView fx:id="cartTable" VBox.vgrow="ALWAYS" styleClass="cart-table">
@@ -35,37 +231,77 @@
                     <TableColumn fx:id="totalCol" text="Total (BDT)" prefWidth="180.0"/>
                 </columns>
                 <placeholder>
-                    <Label text="Cart is empty. Scan barcode or type medicine name to begin sale."/>
+                    <Label fx:id="cartEmptyLabel" text="Cart is empty. Press [F2] to scan barcode or type medicine name."/>
                 </placeholder>
             </TableView>
         </VBox>
     </center>
 
     <right>
-        <VBox prefWidth="360.0" spacing="16.0" styleClass="pos-container">
-            <VBox styleClass="totals-card">
-                <Label text="Payment Summary" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+        <VBox prefWidth="360.0" spacing="12.0" styleClass="pos-container">
+            <VBox styleClass="totals-card" spacing="8.0">
+                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                    <Label fx:id="paymentSummaryTitle" text="Payment Summary" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="taxModeLabel" text="EXCL 0.00%" styleClass="shift-meta-pill"/>
+                </HBox>
+                <Separator/>
+                <HBox spacing="6.0" alignment="CENTER_LEFT">
+                    <ComboBox fx:id="discountTypeCombo" prefWidth="112.0"/>
+                    <TextField fx:id="discountValueField" promptText="0.00" prefWidth="92.0" onAction="#handleApplyPricing"/>
+                    <Button fx:id="btnApplyPricing" text="Apply" styleClass="btn-secondary" onAction="#handleApplyPricing" HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <HBox spacing="6.0" alignment="CENTER_LEFT">
+                    <Label fx:id="roundingModeTitleLabel" text="Rounding:" style="-fx-font-size: 12px; -fx-text-fill: #475569;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <ComboBox fx:id="roundingModeCombo" prefWidth="185.0" onAction="#handleApplyPricing"/>
+                </HBox>
                 <Separator/>
                 <HBox>
-                    <Label text="Subtotal:"/>
+                    <Label fx:id="subtotalTitleLabel" text="Subtotal:"/>
                     <Region HBox.hgrow="ALWAYS"/>
                     <Label fx:id="subtotalLabel" text="BDT 0.00"/>
                 </HBox>
                 <HBox>
-                    <Label text="VAT (5% / Exempt):"/>
+                    <Label fx:id="discountTitleLabel" text="Discount:"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="discountLabel" text="BDT 0.00"/>
+                </HBox>
+                <HBox>
+                    <Label fx:id="vatTitleLabel" text="VAT (5% / Exempt):"/>
                     <Region HBox.hgrow="ALWAYS"/>
                     <Label fx:id="vatLabel" text="BDT 0.00"/>
                 </HBox>
+                <HBox>
+                    <Label fx:id="roundingTitleLabel" text="Rounding Adj:"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="roundingLabel" text="BDT 0.00"/>
+                </HBox>
                 <Separator/>
                 <HBox alignment="CENTER_LEFT">
-                    <Label text="Grand Total:" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                    <Label fx:id="grandTotalTitleLabel" text="Grand Total:" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
                     <Region HBox.hgrow="ALWAYS"/>
                     <Label fx:id="grandTotalLabel" text="BDT 0.00" styleClass="total-amount-large"/>
                 </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="8.0">
+                    <Label fx:id="pricingConfirmBadge" text="Unconfirmed" styleClass="status-badge-offline"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnConfirmPricing" text="Confirm Prices" styleClass="btn-secondary" onAction="#handleConfirmPricing"/>
+                </HBox>
             </VBox>
 
+            <Label fx:id="checkoutRxGateHintLabel" text="Rx Gate: NOT_REQUIRED (OTC Ready)" wrapText="true"
+                   style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #0F5132;"/>
             <Button fx:id="checkoutButton" text="Complete Checkout (F4)"
                     onAction="#handleCheckout" maxWidth="Infinity" styleClass="btn-primary"/>
+
+            <VBox styleClass="totals-card" spacing="6.0">
+                <Label fx:id="shortcutsTitleLabel" text="Keyboard-First Shortcuts" style="-fx-font-weight: bold; -fx-font-size: 13px;"/>
+                <Separator/>
+                <Label fx:id="shortcutsLine1Label" text="[F2] Focus Barcode / Search | [Enter] Add Match" style="-fx-font-size: 12px; -fx-text-fill: #475569;" wrapText="true"/>
+                <Label fx:id="shortcutsLine2Label" text="[Up/Down] Select Item | [+/-] Qty | [U] Unit | [Del] Remove" style="-fx-font-size: 12px; -fx-text-fill: #475569;" wrapText="true"/>
+                <Label fx:id="shortcutsLine3Label" text="[F9] Hold Cart | [F10] Held List | [F4] Checkout | [Esc] Clear" style="-fx-font-size: 12px; -fx-text-fill: #475569;" wrapText="true"/>
+            </VBox>
         </VBox>
     </right>
 
@@ -73,8 +309,7 @@
         <HBox style="-fx-background-color: #E5E7EB; -fx-padding: 8px 16px;" spacing="16.0">
             <Label fx:id="cashierFooterLabel" text="Cashier: cashier-demo | Branch: Dhanmondi Branch"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Label text="Shortcuts: [F2] Scan | [F4] Checkout | [F9] Hold | [Esc] Clear"/>
+            <Label fx:id="footerShortcutsLabel" text="Shortcuts: [F2] Scan | [Enter] Add | [U] Unit | [F9] Hold | [F10] Held | [F4] Checkout"/>
         </HBox>
     </bottom>
 </BorderPane>
-
