@@ -129,7 +129,19 @@ public class DeviceLocalDatabaseSchema {
 
             "CREATE INDEX IF NOT EXISTS idx_cached_stock_branch_prod ON cached_branch_stock(tenant_id, branch_id, product_id)",
             "CREATE INDEX IF NOT EXISTS idx_outbox_sync_state_seq ON pending_offline_commands(sync_state, client_sequence)",
-            "CREATE INDEX IF NOT EXISTS idx_conflict_open ON sync_conflict_queue(tenant_id, resolution_status, created_at)"
+            "CREATE INDEX IF NOT EXISTS idx_conflict_open ON sync_conflict_queue(tenant_id, resolution_status, created_at)",
+
+            "CREATE TABLE IF NOT EXISTS local_provisional_mappings (" +
+                    "mapping_id TEXT PRIMARY KEY, " +
+                    "tenant_id TEXT NOT NULL, " +
+                    "branch_id TEXT NOT NULL, " +
+                    "entity_type TEXT NOT NULL, " +
+                    "provisional_id TEXT NOT NULL UNIQUE, " +
+                    "canonical_id TEXT NOT NULL, " +
+                    "idempotency_key TEXT NOT NULL, " +
+                    "reconciled_at TEXT NOT NULL)",
+
+            "CREATE INDEX IF NOT EXISTS idx_prov_canon ON local_provisional_mappings(tenant_id, entity_type, canonical_id)"
     );
 
     public static void initializeAndBind(
