@@ -121,7 +121,7 @@ public class DeviceLocalDatabaseSchema {
                     "local_payload_json TEXT NOT NULL, " +
                     "server_state_json TEXT NOT NULL DEFAULT '{}', " +
                     "resolution_status TEXT NOT NULL DEFAULT 'OPEN' CHECK (resolution_status IN (" +
-                    "'OPEN', 'RESOLVED_KEEP_SERVER', 'RESOLVED_ADJUSTED', 'ESCALATED')), " +
+                    "'OPEN', 'DECISION_PROPOSED', 'RESOLVED_KEEP_SERVER', 'RESOLVED_ADJUSTED', 'ESCALATED', 'REJECTED')), " +
                     "resolved_by TEXT, " +
                     "resolved_at TEXT, " +
                     "created_at TEXT NOT NULL, " +
